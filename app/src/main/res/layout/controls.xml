@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/addMotor"
+        android:layout_marginLeft="10dp"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="@string/motor_icon" />
+
+    <TextView
+        android:id="@+id/addTimer"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="@string/timer_icon" />
+
+    <TextView
+        android:id="@+id/addRandomCall"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="@string/randomcall_icon" />
+
+    <TextView
+        android:id="@+id/addWaitForColor"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="@string/waitforcolor_icon" />
+
+    <TextView
+        android:id="@+id/addExecIfColor"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="@string/execifcolor_icon" />
+
+    <TextView
+        android:id="@+id/delete"
+        android:layout_marginLeft="10dp"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="🗑️" />
+
+</LinearLayout>

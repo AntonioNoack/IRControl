@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Power Functions Remote</string>
+    <string name="disableVoiceRecognition">Listening… (Click to disable Voice Commands)</string>
+    <string name="enableVoiceRecognition">Listen for Voice</string>
+    <string name="no_projects_found">No projects were found</string>
+    <string name="choose_project_name">Choose Project Name</string>
+    <string name="project_name">New Project Name</string>
+    <string name="create_project_button">Create</string>
+    <string name="create_project_menu">Create Project</string>
+    <string name="projects_title">Projects:</string>
+    <string name="manual_control_menu">Manual Control</string>
+    <string name="run_button">Run</string>
+    <string name="repeat_button">Repeat</string>
+    <string name="stop_button">Stop</string>
+    <string name="motor_icon">⚡</string>
+    <string name="timer_icon">🕒</string>
+    <string name="sleep_title">Sleep :</string>
+    <string name="motor_title">Motor</string>
+    <string name="sequencer_title">Sequencer</string>
+    <string name="delete">Delete</string>
+    <string name="copy">Copy</string>
+    <string name="rename">Rename</string>
+    <string name="delete_rename_copy_project">Delete/Rename/Copy Project</string>
+    <string name="random_call">Random Call</string>
+    <string name="randomcall_icon">🎲</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="waitforcolor_icon">📷</string>
+    <string name="camera_title">Preview:</string>
+    <string name="sensitivity_title">Sensitivity:</string>
+    <string name="execifcolor_icon">📸</string>
+    <string name="configure">Pixel</string>
+</resources>

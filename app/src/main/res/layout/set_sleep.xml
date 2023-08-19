@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:background="#333539"
+    android:orientation="horizontal"
+    android:padding="5dp">
+
+    <TextView
+        android:id="@+id/active"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:textColor="#0000"
+        android:textSize="20sp"
+        android:text=">" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:textSize="20sp"
+        android:text="@string/sleep_title"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/duration"
+        android:layout_width="70dp"
+        android:layout_height="30dp"
+        android:background="#5cf"
+        android:gravity="center"
+        android:text="1s"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:textColor="@color/black" />
+
+    <include layout="@layout/controls"/>
+
+</LinearLayout>

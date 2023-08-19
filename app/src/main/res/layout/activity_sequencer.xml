@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sequencer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#333539"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:id="@+id/colorPreview0"
+        android:padding="5dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/preview"
+            android:background="#333539"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/voiceTest"
+                        style="@style/BetterButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/enableVoiceRecognition"
+                        android:textAllCaps="false" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/white" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/run"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="5dp"
+                        android:text="@string/run_button"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/repeat"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="5dp"
+                        android:text="@string/repeat_button"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/stopSequence"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="5dp"
+                        android:text="@string/stop_button"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/addMotor"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="5dp"
+                        android:text="@string/motor_icon"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/addTimer"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="5dp"
+                        android:text="@string/timer_icon"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/addRandomCall"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="5dp"
+                        android:text="@string/randomcall_icon"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/addWaitForColor"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/waitforcolor_icon"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/addExecIfColor"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/execifcolor_icon"
+                        android:textAllCaps="false" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/sequence"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                </LinearLayout>
+            </LinearLayout>
+        </HorizontalScrollView>
+
+    </ScrollView>
+</FrameLayout>

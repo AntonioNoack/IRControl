@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="#333539"
+    android:padding="5dp">
+
+    <TextView
+        android:id="@+id/active"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:textColor="#0000"
+        android:textSize="20sp"
+        android:text=">" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:text="@string/motor_title" />
+
+    <TextView
+        android:id="@+id/colorId"
+        android:textColor="@color/black"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="#f55"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="R" />
+
+    <TextView
+        android:id="@+id/channelId"
+        android:textColor="@color/black"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="#fc5"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="1" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:text=":" />
+
+    <TextView
+        android:id="@+id/speed"
+        android:layout_width="70dp"
+        android:layout_height="30dp"
+        android:background="#5cf"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:text="stop" />
+
+    <include layout="@layout/controls"/>
+
+</LinearLayout>

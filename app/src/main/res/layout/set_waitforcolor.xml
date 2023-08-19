@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="#333539"
+    android:padding="5dp">
+
+    <TextView
+        android:id="@+id/active"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:textColor="#0000"
+        android:textSize="20sp"
+        android:text=">" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:text="Wait For Color" />
+
+    <View
+        android:id="@+id/colorId"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginRight="10dp"
+        android:background="#000"/>
+
+    <TextView
+        android:id="@+id/settingsButton"
+        android:layout_width="57dp"
+        android:layout_height="30dp"
+        android:background="#fc5"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:text="@string/configure" />
+
+    <TextView
+        android:id="@+id/numCallsId1"
+        android:textColor="@color/black"
+        android:layout_marginLeft="10dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="#f55"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="7" />
+
+    <TextView
+        android:id="@+id/numCallsId2"
+        android:textColor="@color/black"
+        android:layout_marginLeft="10dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="#f55"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="3" />
+
+    <TextView
+        android:id="@+id/duration"
+        android:layout_marginLeft="10dp"
+        android:layout_width="70dp"
+        android:layout_height="30dp"
+        android:background="#5cf"
+        android:gravity="center"
+        android:text="1s"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:textColor="@color/black" />
+
+    <include layout="@layout/controls"/>
+
+</LinearLayout>

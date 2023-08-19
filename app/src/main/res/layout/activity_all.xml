@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/flipper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#333539"
+    android:orientation="vertical">
+
+    <include layout="@layout/activity_start" />
+
+    <include layout="@layout/activity_manual" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="@string/sequencer_title"
+            android:textColor="@color/purple_200"
+            android:textSize="20sp" />
+
+        <include layout="@layout/activity_sequencer" />
+
+    </LinearLayout>
+
+</ViewFlipper>
