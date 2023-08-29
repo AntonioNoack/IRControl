@@ -42,7 +42,7 @@ object CameraSensor {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.tryStartCamera(
-        src: WaitForColor, inBackground: Boolean,
+        src: List<WaitForColor>, inBackground: Boolean,
         onValuesChanged: (tmp: WaitForColor?) -> Boolean
     ) {
         isCloseEnough = false
@@ -58,6 +58,12 @@ object CameraSensor {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, CAMERA_PERMISSIONS_ID)
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun MainActivity.tryStartCamera(
+        src: WaitForColor, inBackground: Boolean,
+        onValuesChanged: (tmp: WaitForColor?) -> Boolean
+    ) = tryStartCamera(listOf(src), inBackground, onValuesChanged)
 
     private fun yuv2rgb(y: Int, u: Int, v: Int): Int {
         val r = y + (+91881 * v - 11698176).shr(16)
@@ -87,8 +93,8 @@ object CameraSensor {
 
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun MainActivity.startCamera(src: WaitForColor) {
-        target.set(src)
+    fun MainActivity.startCamera(src: List<WaitForColor>) {
+        targets = src.map { WaitForColor().apply { set(it) } }
         if (runCameraInBackground) {
             if (!hasBackgroundCamera) {
                 startCamera(
@@ -108,13 +114,15 @@ object CameraSensor {
             hasBackgroundCamera = false
 
             val slider = dialog.findViewById<Slider>(R.id.sensitivitySlider)
-            slider.value = dst.sensitivity
+            slider.value = dst.first().sensitivity
             slider.addOnChangeListener { _, value, _ ->
-                dst.sensitivity = value
+                for (dstI in dst) dstI.sensitivity = value
             }
 
             dialog.findViewById<View>(R.id.okButton).setOnClickListener {
-                src.set(dst)
+                for (i in src.indices) {
+                    src[i].set(dst[i])
+                }
                 save()
                 waitForColorCallback?.invoke(null)
                 dialog.dismiss()
@@ -127,16 +135,15 @@ object CameraSensor {
         }
     }
 
-    val target = WaitForColor()
+    var targets = listOf<WaitForColor>()
     var isCloseEnough = false
 
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.startCamera(
-        w: View,
-        dialog: Dialog?,
+        w: View, dialog: Dialog?,
         addTouchListener: Boolean
-    ): WaitForColor {
+    ): List<WaitForColor> {
 
         val preview1 = w.findViewById<PreviewView>(R.id.preview)
         preview1.visibility = View.VISIBLE
@@ -147,7 +154,7 @@ object CameraSensor {
         color0?.setBackgroundColor(0)
 
         val color1 = w.findViewById<View>(R.id.colorPreview1)
-        color1?.setBackgroundColor(target.color or black)
+        color1?.setBackgroundColor(targets.first().color or black)
 
         val crosshair = w.findViewById<View>(R.id.crosshair)
         crosshair?.invalidate()
@@ -163,9 +170,11 @@ object CameraSensor {
                 val y = event.y
                 // video is cropped -> crop this mathematically, too
                 val minSize = min(v.width, v.height)
-                target.rx = (x - v.width * 0.5f) / minSize  // [-.5, +.5] or more
-                target.ry = (y - v.height * 0.5f) / minSize // [-.5, +.5] or more
-                waitForColorCallback?.invoke(target)
+                for (target in targets) {
+                    target.rx = (x - v.width * 0.5f) / minSize  // [-.5, +.5] or more
+                    target.ry = (y - v.height * 0.5f) / minSize // [-.5, +.5] or more
+                    waitForColorCallback?.invoke(target)
+                }
                 crosshair?.invalidate()
                 queryColor = true
             }
@@ -194,45 +203,50 @@ object CameraSensor {
                 .build()
             analysis.setAnalyzer(cameraExecutor) { img ->
 
-                vx.set(target.rx, target.ry).rotate(-img.imageInfo.rotationDegrees)
+                var isCloseEnough = false
+                for (target in targets) {
+                    vx.set(target.rx, target.ry).rotate(-img.imageInfo.rotationDegrees)
 
-                // calculate sample coordinates
-                val minSize = min(img.width, img.height)
-                val ax = (vx.x * minSize + img.width * 0.5f).toInt()
-                val ay = (vx.y * minSize + img.height * 0.5f).toInt()
-                val cx = clamp(ax, 0, img.width - 1)
-                val cy = clamp(ay, 0, img.height - 1)
-                val ux = cx ushr 1
-                val uy = cy ushr 1
+                    // calculate sample coordinates
+                    val minSize = min(img.width, img.height)
+                    val ax = (vx.x * minSize + img.width * 0.5f).toInt()
+                    val ay = (vx.y * minSize + img.height * 0.5f).toInt()
+                    val cx = clamp(ax, 0, img.width - 1)
+                    val cy = clamp(ay, 0, img.height - 1)
+                    val ux = cx ushr 1
+                    val uy = cy ushr 1
 
-                // sample color there
-                val y = sample(img.planes[0], cx, cy)
-                val u = sample(img.planes[1], ux, uy)
-                val v = sample(img.planes[2], ux, uy)
+                    // sample color there
+                    val y = sample(img.planes[0], cx, cy)
+                    val u = sample(img.planes[1], ux, uy)
+                    val v = sample(img.planes[2], ux, uy)
 
-                // convert to rgb, and save it
-                val color = yuv2rgb(y, u, v)
-                color0?.setBackgroundColor(color or black)
-
-                if (queryColor) {
                     // convert to rgb, and save it
-                    target.color = color
-                    color1.setBackgroundColor(target.color or black)
-                    queryColor = false
+                    val color = yuv2rgb(y, u, v)
+                    color0?.setBackgroundColor(color or black)
+
+                    if (queryColor) {
+                        // convert to rgb, and save it
+                        target.color = color
+                        color1.setBackgroundColor(target.color or black)
+                        queryColor = false
+                    }
+
+                    // evaluate whether we're close enough
+                    val maxDist = 255 * sqrt(3.0)
+                    val dstColor = target.color
+                    val dstColorYUV = rgb2yuv(dstColor)
+                    val dx = y - dstColorYUV.shr(16).and(255)
+                    val dy = u - dstColorYUV.shr(8).and(255)
+                    val dz = v - dstColorYUV.and(255)
+                    val dist = sqrt((dx * dx + dy * dy + dz * dz).toDouble()) / maxDist
+
+                    isCloseEnough = isCloseEnough || dist < 1f - target.sensitivity
+
                 }
+                CameraSensor.isCloseEnough = isCloseEnough
 
-                // evaluate whether we're close enough
-                val maxDist = 255 * sqrt(3.0)
-                val dstColor = target.color
-                val dstColorYUV = rgb2yuv(dstColor)
-                val dx = y - dstColorYUV.shr(16).and(255)
-                val dy = u - dstColorYUV.shr(8).and(255)
-                val dz = v - dstColorYUV.and(255)
-                val dist = sqrt((dx * dx + dy * dy + dz * dz).toDouble()) / maxDist
-
-                isCloseEnough = dist < 1f - target.sensitivity
-
-                if (waitForColorCallback?.invoke(target) == true) {
+                if (waitForColorCallback?.invoke(targets.first()) == true) {
                     dialog?.dismiss()
                 } else if (resultPreview != null) {
                     runOnUiThread {
@@ -259,7 +273,7 @@ object CameraSensor {
 
         }, ContextCompat.getMainExecutor(this))
 
-        return target
+        return targets
     }
 
     fun MainActivity.allPermissionsGranted() = REQUIRED_PERMISSIONS.all {

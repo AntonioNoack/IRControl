@@ -135,6 +135,33 @@ object CommandLogic {
                             } else continue
                         }
 
+                        'X' -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                val vs = cmd.substring(1).split(';')
+                                val names = vs.subList(9, vs.size)
+                                var elseIdx = names.indexOf("")
+                                if (elseIdx < 0) elseIdx = names.size
+                                n = ExecIfColorX2(
+                                    WaitForColor(
+                                        vs[0].toFloat(),
+                                        vs[1].toFloat(),
+                                        vs[2].toInt(16),
+                                        vs[3].toFloat()
+                                    ),
+                                    WaitForColor(
+                                        vs[4].toFloat(),
+                                        vs[5].toFloat(),
+                                        vs[6].toInt(16),
+                                        vs[7].toFloat(),
+                                    ),
+                                    vs[8].toFloat(),
+                                    names.subList(0, elseIdx).filter { it.isNotBlank() },
+                                    names.subList(elseIdx, names.size).filter { it.isNotBlank() }
+                                )
+                                v = execIfColorX2(n)
+                            } else continue
+                        }
+
                         else -> continue
                     }
                     sequence.add(n)
@@ -197,6 +224,17 @@ object CommandLogic {
                 }
             } else visibility = View.GONE
         }
+        v.findViewById<TextView>(R.id.addExecIfColorX2).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                setOnClickListener {
+                    addExecIfColorX2(n)
+                }
+                setOnLongClickListener {
+                    toast("Add exec-if-color", false)
+                    true
+                }
+            } else visibility = View.GONE
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -212,7 +250,7 @@ object CommandLogic {
                     save()
                 }
             }
-        v.findViewById<TextView>(R.id.colorId)
+        v.findViewById<TextView>(R.id.colorId0)
             .apply {
                 text = if (n.red) "R" else "B"
                 setBackgroundColor((if (n.red) 0xff5555 else 0x5555ff) or (255 shl 24))
@@ -351,17 +389,15 @@ object CommandLogic {
         @SuppressLint("InflateParams")
         val v = layoutInflater.inflate(R.layout.set_waitforcolor, null)
         if (n is ExecIfColor) v.findViewById<TextView>(R.id.title).text = "Color-IfElse"
-        val colorView = v.findViewById<View>(R.id.colorId)
+        val colorView = v.findViewById<View>(R.id.colorId0)
         colorView.setBackgroundColor(n.color or black)
-        v.findViewById<View>(R.id.settingsButton)
-            .setOnClickListener {
-                tryStartCamera(n, false) {
-                    if (it != null) {
-                        colorView.setBackgroundColor((it.color) or black)
-                    }
-                    false
-                }
+        v.findViewById<View>(R.id.colorId1).visibility = View.GONE
+        colorView.setOnClickListener {
+            tryStartCamera(n, false) {
+                if (it != null) colorView.setBackgroundColor((it.color) or black)
+                false
             }
+        }
         if (n is ExecIfColor) {
             setupRandomCallList(v.findViewById(R.id.numCallsId1), n.ifNames) { n.ifNames = it }
             setupRandomCallList(v.findViewById(R.id.numCallsId2), n.elseNames) { n.elseNames = it }
@@ -371,6 +407,35 @@ object CommandLogic {
             v.findViewById<View>(R.id.numCallsId2).visibility = View.GONE
             v.findViewById<View>(R.id.duration).visibility = View.GONE
         }
+        finishSetup(v, n)
+        return v
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @SuppressLint("SetTextI18n", "MissingInflatedId")
+    fun MainActivity.execIfColorX2(n: ExecIfColorX2): View {
+        @SuppressLint("InflateParams")
+        val v = layoutInflater.inflate(R.layout.set_waitforcolor, null)
+        v.findViewById<TextView>(R.id.title).text = "Color-IfElse2"
+        val colorView0 = v.findViewById<View>(R.id.colorId0)
+        colorView0.setBackgroundColor(n.wfc0.color or black)
+        colorView0.setOnClickListener {
+            tryStartCamera(n.wfc0, false) {
+                if (it != null) colorView0.setBackgroundColor((it.color) or black)
+                false
+            }
+        }
+        val colorView1 = v.findViewById<View>(R.id.colorId1)
+        colorView1.setBackgroundColor(n.wfc1.color or black)
+        colorView1.setOnClickListener {
+            tryStartCamera(n.wfc1, false) {
+                if (it != null) colorView1.setBackgroundColor((it.color) or black)
+                false
+            }
+        }
+        setupRandomCallList(v.findViewById(R.id.numCallsId1), n.ifNames) { n.ifNames = it }
+        setupRandomCallList(v.findViewById(R.id.numCallsId2), n.elseNames) { n.elseNames = it }
+        setupDuration(v.findViewById(R.id.duration), n.duration) { n.duration = it }
         finishSetup(v, n)
         return v
     }
@@ -432,8 +497,18 @@ object CommandLogic {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.addExecIfColor(item: Any?) {
         val i = sequence.indexOf(item) + 1
-        val n = ExecIfColor(0f, 0f, 0, 0.5f, 0.2f, emptyList(), emptyList())
+        val n = ExecIfColor()
         val v = execIfColor(n)
+        sequence.add(i, n)
+        sequenceView.addView(v, i)
+        save()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun MainActivity.addExecIfColorX2(item: Any?) {
+        val i = sequence.indexOf(item) + 1
+        val n = ExecIfColorX2()
+        val v = execIfColorX2(n)
         sequence.add(i, n)
         sequenceView.addView(v, i)
         save()
@@ -487,8 +562,44 @@ object CommandLogic {
                         var isCloseEnough = false
 
                         tryStartCamera(command, true) {
-                            if (it != null && CameraSensor.target.color == command.color && CameraSensor.isCloseEnough) isCloseEnough =
-                                true
+                            if (it != null &&
+                                CameraSensor.targets.firstOrNull()?.color == command.color &&
+                                CameraSensor.isCloseEnough
+                            )
+                                isCloseEnough = true
+                            if (it == null || isCloseEnough) shallRun = false
+                            !shallRun
+                        }
+
+                        val startTime = System.nanoTime()
+                        val timeout = (command.duration * 1e9).toLong()
+                        while (
+                            runId == id && shallRun &&
+                            System.nanoTime() - startTime < timeout
+                        ) Thread.sleep(1)
+
+                        val names = if (CameraSensor.isCloseEnough) command.ifNames
+                        else command.elseNames
+                        val name = names.randomOrNull()
+                        if (name != null) tryExecFunction(name, i)
+
+                        shallRun = false
+                        waitForColorCallback = null
+                    }
+                }
+
+                is ExecIfColorX2 -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                        var shallRun = true
+                        var isCloseEnough = false
+
+                        tryStartCamera(listOf(command.wfc0, command.wfc1), true) {
+                            if (it != null &&
+                                (CameraSensor.targets.getOrNull(0)?.color == command.wfc0.color ||
+                                        CameraSensor.targets.getOrNull(1)?.color == command.wfc1.color) &&
+                                CameraSensor.isCloseEnough
+                            ) isCloseEnough = true
                             if (it == null || isCloseEnough) shallRun = false
                             !shallRun
                         }
@@ -515,7 +626,10 @@ object CommandLogic {
                         var shallRun = true
                         var isCloseEnough = false
                         tryStartCamera(command, true) {
-                            if (it != null && CameraSensor.target.color == command.color && CameraSensor.isCloseEnough) isCloseEnough =
+                            if (it != null &&
+                                CameraSensor.targets.firstOrNull()?.color == command.color &&
+                                CameraSensor.isCloseEnough
+                            ) isCloseEnough =
                                 true
                             if (it == null || isCloseEnough) shallRun = false
                             !shallRun

@@ -6,7 +6,9 @@ open class ExecIfColor(
     var ifNames: List<String>,
     var elseNames: List<String>
 ) : WaitForColor(rx, ry, color, sensitivity) {
+    constructor() : this(0f, 0f, 0, 0.5f, 0.2f, emptyList(), emptyList())
+
     override fun toString(): String {
-        return "${toString("x")};$duration;${ifNames.joinToString(";") { it.trim() }};;${elseNames.joinToString(";") { it.trim() }}"
+        return "${toString("x")};$duration;${ifNames.joinToString(";")};;${elseNames.joinToString(";")}"
     }
 }

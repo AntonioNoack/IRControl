@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     var speechRecognizer: SpeechRecognizer? = null
     var voiceTestView: TextView? = null
 
-    var waitForColorCommand: WaitForColor? = null
+    var waitForColorCommand: List<WaitForColor> = emptyList()
     var waitForColorCallback: ((WaitForColor?) -> Boolean)? = null
     var runCameraInBackground = false
     var hasBackgroundCamera = false
@@ -104,11 +104,12 @@ class MainActivity : AppCompatActivity() {
                     // handleSpeechEnd(false)
                 }
             }
+
             CAMERA_PERMISSIONS_ID -> {
                 if (allPermissionsGranted()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         val cmd = waitForColorCommand
-                        if (cmd != null) startCamera(cmd)
+                        if (cmd.isNotEmpty()) startCamera(cmd)
                     } else toast("Android API too old :/", true)
                 } else if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
                     toast("Granted but missing camera permissions", true)

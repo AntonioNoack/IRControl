@@ -139,6 +139,14 @@
                         android:text="@string/execifcolor_icon"
                         android:textAllCaps="false" />
 
+                    <Button
+                        android:id="@+id/addExecIfColorX2"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/execIfColorX2_icon"
+                        android:textAllCaps="false" />
+
                 </LinearLayout>
 
                 <LinearLayout

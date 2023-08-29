@@ -27,21 +27,17 @@
         android:text="Wait For Color" />
 
     <View
-        android:id="@+id/colorId"
+        android:id="@+id/colorId0"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginRight="10dp"
         android:background="#000"/>
 
-    <TextView
-        android:id="@+id/settingsButton"
-        android:layout_width="57dp"
+    <View
+        android:id="@+id/colorId1"
+        android:layout_marginLeft="10dp"
+        android:layout_width="30dp"
         android:layout_height="30dp"
-        android:background="#fc5"
-        android:textSize="20sp"
-        android:gravity="center"
-        android:textColor="@color/black"
-        android:text="@string/configure" />
+        android:background="#000"/>
 
     <TextView
         android:id="@+id/numCallsId1"
