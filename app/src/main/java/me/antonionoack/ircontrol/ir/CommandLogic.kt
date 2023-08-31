@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.app.AlertDialog.Builder
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
 import android.hardware.ConsumerIrManager
 import android.os.Build
 import android.text.InputType
@@ -19,7 +20,17 @@ import me.antonionoack.ircontrol.R
 import me.antonionoack.ircontrol.camera.CameraSensor
 import me.antonionoack.ircontrol.camera.CameraSensor.black
 import me.antonionoack.ircontrol.camera.CameraSensor.tryStartCamera
+import me.antonionoack.ircontrol.ir.commands.DrawnControl
+import me.antonionoack.ircontrol.ir.commands.ExecIfColor
+import me.antonionoack.ircontrol.ir.commands.ExecIfColorX2
+import me.antonionoack.ircontrol.ir.commands.MotorSpeed
+import me.antonionoack.ircontrol.ir.commands.RandomCall
+import me.antonionoack.ircontrol.ir.commands.Sleep
+import me.antonionoack.ircontrol.ir.commands.WaitForColor
+import me.antonionoack.ircontrol.ir.views.DrawingCommandsView
 import kotlin.concurrent.thread
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 object CommandLogic {
 
@@ -162,6 +173,22 @@ object CommandLogic {
                             } else continue
                         }
 
+                        'd' -> {
+                            val vs = cmd.substring(1).split(';')
+                            val length = (vs.size - 1) / 3
+                            val motors = Motor.values()
+                            n = DrawnControl(vs[0].toFloat(),
+                                (0 until length).map {
+                                    val i3 = it * 3 + 1
+                                    DrawnControl.SpeedChange(
+                                        motors[vs[i3].toInt()],
+                                        vs[i3 + 1].toInt(),
+                                        vs[i3 + 2].toFloat()
+                                    )
+                                })
+                            v = drawnControl(n)
+                        }
+
                         else -> continue
                     }
                     sequence.add(n)
@@ -186,7 +213,7 @@ object CommandLogic {
         }
         v.findViewById<TextView>(R.id.addTimer).apply {
             setOnClickListener {
-                addTimer(n)
+                addSleep(n)
             }
             setOnLongClickListener {
                 toast("Add a time delay", false)
@@ -199,6 +226,15 @@ object CommandLogic {
             }
             setOnLongClickListener {
                 toast("Add random call list", false)
+                true
+            }
+        }
+        v.findViewById<TextView>(R.id.addDrawnControl).apply {
+            setOnClickListener {
+                addDrawnControl(n)
+            }
+            setOnLongClickListener {
+                toast("Hand-drawn control", false)
                 true
             }
         }
@@ -230,7 +266,7 @@ object CommandLogic {
                     addExecIfColorX2(n)
                 }
                 setOnLongClickListener {
-                    toast("Add exec-if-color", false)
+                    toast("Add exec-if-color2", false)
                     true
                 }
             } else visibility = View.GONE
@@ -305,6 +341,49 @@ object CommandLogic {
         @SuppressLint("InflateParams")
         val v = layoutInflater.inflate(R.layout.set_sleep, null)
         setupDuration(v.findViewById(R.id.duration), n.duration) { n.duration = it }
+        finishSetup(v, n)
+        return v
+    }
+
+    private fun MainActivity.drawnControl(n: DrawnControl): View {
+        @SuppressLint("InflateParams")
+        val v = layoutInflater.inflate(R.layout.set_drawncontrol, null)
+        setupDuration(v.findViewById(R.id.duration), n.duration) { n.duration = it }
+        val ctx = this
+        v.findViewById<TextView>(R.id.drawControlButton).setOnClickListener {
+            val dia = Dialog(ctx)
+            dia.setContentView(R.layout.dialog_drawcommands)
+            dia.setTitle("Drawn Control")
+            val dc = dia.findViewById<DrawingCommandsView>(R.id.drawingCommands)
+            val gr = dia.findViewById<LinearLayout>(R.id.motorButtons)
+            val normalTextColor = Color.BLACK
+            val selectedTextColor = Color.WHITE
+            for (i in 0 until 8) {
+                val child = gr.getChildAt(i) as TextView
+                child.setTextColor(if (i == 0) selectedTextColor else normalTextColor)
+                child.setBackgroundColor(DrawingCommandsView.colors[i] or (255 shl 24))
+                child.setOnClickListener {
+                    (gr.getChildAt(dc.selectedMotor) as TextView).setTextColor(normalTextColor)
+                    child.setTextColor(selectedTextColor)
+                    dc.selectedMotor = i
+                    dc.invalidate()
+                }
+            }
+            dc.selectedMotor = 0
+            dc.speedChanges.clear()
+            dc.speedChanges.addAll(n.speedChanges)
+            dia.findViewById<View>(R.id.cancelButton)
+                .setOnClickListener {
+                    dia.dismiss()
+                }
+            dia.findViewById<View>(R.id.okButton)
+                .setOnClickListener { _ ->
+                    n.speedChanges = dc.speedChanges
+                    save()
+                    dia.dismiss()
+                }
+            dia.show()
+        }
         finishSetup(v, n)
         return v
     }
@@ -466,7 +545,7 @@ object CommandLogic {
         save()
     }
 
-    fun MainActivity.addTimer(item: Any?) {
+    fun MainActivity.addSleep(item: Any?) {
         val i = sequence.indexOf(item) + 1
         val n = Sleep(1f)
         val v = sleep(n)
@@ -479,6 +558,15 @@ object CommandLogic {
         val i = sequence.indexOf(item) + 1
         val n = RandomCall(emptyList())
         val v = randomCall(n)
+        sequence.add(i, n)
+        sequenceView.addView(v, i)
+        save()
+    }
+
+    fun MainActivity.addDrawnControl(item: Any?) {
+        val i = sequence.indexOf(item) + 1
+        val n = DrawnControl(5f, emptyList())
+        val v = drawnControl(n)
         sequence.add(i, n)
         sequenceView.addView(v, i)
         save()
@@ -530,18 +618,21 @@ object CommandLogic {
                 }
             }
         }
+
+        fun doSleep(duration: Float) {
+            var sleep = (duration * 1000).toLong()
+            while (sleep > 0 && runId == id) {
+                Thread.sleep(1)
+                sleep--
+                slept = true
+            }
+        }
+
         while (runId == id) {
             val command = sequence.getOrNull(i++) ?: break
             update()
             when (command) {
-                is Sleep -> {
-                    var sleep = (command.duration * 1000).toLong()
-                    while (sleep > 0 && runId == id) {
-                        Thread.sleep(1)
-                        sleep--
-                    }
-                    slept = true
-                }
+                is Sleep -> doSleep(command.duration)
 
                 is MotorSpeed -> {
                     // R1, B1, R2, B2, R3, B3, R4, B4
@@ -639,6 +730,80 @@ object CommandLogic {
                         }
                         shallRun = false
                         waitForColorCallback = null
+                    }
+                }
+
+                is DrawnControl -> {
+                    val commands0 = command.speedChanges
+                    val duration = command.duration
+                    if (commands0.isEmpty()) {
+                        doSleep(duration)
+                    } else {
+                        val tis = commands0.map { it.time }
+                        val t0 = tis.min()
+                        val t1 = tis.max()
+                        if (t1 > t0) {
+
+                            // apply everything properly
+                            // insert interpolated steps
+                            val speeds = IntArray(8)
+                            val times = FloatArray(8)
+                            times.fill(Float.NaN)
+
+                            val commands = ArrayList<DrawnControl.SpeedChange>()
+                            for (change in commands0) {
+                                val mi = change.motor.ordinal
+                                val lt = times[mi]
+                                if (lt.isFinite()) {
+                                    fun mix(a: Float, b: Float, f: Float): Float {
+                                        return a + (b - a) * f
+                                    }
+
+                                    val ls = speeds[mi]
+                                    val delta = abs(ls - change.speed) - 1
+                                    for (j in 1 until delta) {
+                                        val f = j.toFloat() / delta
+                                        commands.add(
+                                            DrawnControl.SpeedChange(
+                                                change.motor,
+                                                mix(
+                                                    ls.toFloat(),
+                                                    change.speed.toFloat(), f
+                                                ).roundToInt(),
+                                                mix(lt, change.time, f),
+                                            )
+                                        )
+                                    }
+                                }
+                                speeds[mi] = change.speed
+                                times[mi] = change.time
+                                commands.add(change)
+                            }
+
+                            var j = 0
+                            var sleep = (duration * 1000).toLong()
+                            val dt = (t1 - t0) / sleep
+                            var ti = t0
+                            while (sleep > 0 && runId == id) {
+                                ti += dt
+                                // execute all commands that should be done
+                                while (j < commands.size && ti >= commands[j].time) {
+                                    commands[j++].apply()
+                                }
+                                // continue sleeping
+                                Thread.sleep(1)
+                                slept = true
+                                sleep--
+                            }
+                            // execute all remaining commands
+                            while (j < commands.size) {
+                                commands[j++].apply()
+                            }
+                        } else {
+                            doSleep(duration / 2)
+                            for (cmd in commands0) cmd.apply()
+                            doSleep(duration / 2)
+                        }
                     }
                 }
             }

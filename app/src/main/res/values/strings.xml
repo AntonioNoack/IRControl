@@ -30,4 +30,6 @@
     <string name="sensitivity_title">Sensitivity:</string>
     <string name="execifcolor_icon">📸</string>
     <string name="execIfColorX2_icon">☯︎</string>
+    <string name="drawnControl_icon">🎨</string>
+    <string name="drawn_control_title">Drawn Control</string>
 </resources>

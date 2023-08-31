@@ -29,7 +29,7 @@ import me.antonionoack.ircontrol.ir.CommandLogic.startMotorController
 import me.antonionoack.ircontrol.ir.CommandLogic.stopMotorController
 import me.antonionoack.ircontrol.ir.CommandLogic.stopRunning
 import me.antonionoack.ircontrol.ir.Motor
-import me.antonionoack.ircontrol.ir.WaitForColor
+import me.antonionoack.ircontrol.ir.commands.WaitForColor
 import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {

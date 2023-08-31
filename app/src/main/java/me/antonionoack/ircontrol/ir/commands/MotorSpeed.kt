@@ -1,4 +1,6 @@
-package me.antonionoack.ircontrol.ir
+package me.antonionoack.ircontrol.ir.commands
+
+import me.antonionoack.ircontrol.ir.Command
 
 class MotorSpeed(var red: Boolean, var id: Int, var speed: Int) : Command() {
     override fun toString(): String {

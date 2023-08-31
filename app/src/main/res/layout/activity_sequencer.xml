@@ -16,9 +16,9 @@
 
         <androidx.camera.view.PreviewView
             android:id="@+id/preview"
-            android:background="#333539"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:background="#333539" />
 
     </LinearLayout>
 
@@ -145,6 +145,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/execIfColorX2_icon"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/addDrawnControl"
+                        style="@style/BetterButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/drawnControl_icon"
                         android:textAllCaps="false" />
 
                 </LinearLayout>

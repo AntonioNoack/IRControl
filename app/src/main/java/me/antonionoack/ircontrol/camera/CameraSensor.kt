@@ -23,7 +23,7 @@ import com.google.android.material.slider.Slider
 import me.antonionoack.ircontrol.MainActivity
 import me.antonionoack.ircontrol.R
 import me.antonionoack.ircontrol.ir.CommandLogic.save
-import me.antonionoack.ircontrol.ir.WaitForColor
+import me.antonionoack.ircontrol.ir.commands.WaitForColor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.min

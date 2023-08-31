@@ -1,4 +1,4 @@
-package me.antonionoack.ircontrol.ir
+package me.antonionoack.ircontrol.ir.commands
 
 open class ExecIfColor(
     rx: Float, ry: Float, color: Int, sensitivity: Float,

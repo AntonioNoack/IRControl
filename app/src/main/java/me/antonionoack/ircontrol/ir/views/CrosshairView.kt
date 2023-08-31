@@ -1,4 +1,4 @@
-package me.antonionoack.ircontrol.ir
+package me.antonionoack.ircontrol.ir.views
 
 import android.content.Context
 import android.graphics.Canvas
