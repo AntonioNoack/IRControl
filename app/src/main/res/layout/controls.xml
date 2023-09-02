@@ -85,6 +85,18 @@
         android:textAllCaps="false" />
 
     <TextView
+        android:id="@+id/addQuit"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="@string/quit_icon"
+        android:textAllCaps="false" />
+
+    <TextView
         android:id="@+id/delete"
         android:layout_marginLeft="10dp"
         android:textColor="#aaa"

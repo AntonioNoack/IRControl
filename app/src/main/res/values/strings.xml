@@ -14,7 +14,7 @@
     <string name="stop_button">Stop</string>
     <string name="motor_icon">⚡</string>
     <string name="timer_icon">🕒</string>
-    <string name="sleep_title">Sleep :</string>
+    <string name="sleep_title">Sleep</string>
     <string name="motor_title">Motor</string>
     <string name="sequencer_title">Sequencer</string>
     <string name="delete">Delete</string>
@@ -32,4 +32,6 @@
     <string name="execIfColorX2_icon">☯︎</string>
     <string name="drawnControl_icon">🎨</string>
     <string name="drawn_control_title">Drawn Control</string>
+    <string name="quit_title">Quit</string>
+    <string name="quit_icon">🛑</string>
 </resources>

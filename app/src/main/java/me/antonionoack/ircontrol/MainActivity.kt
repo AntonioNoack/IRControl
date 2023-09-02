@@ -57,6 +57,8 @@ class MainActivity : AppCompatActivity() {
         sequenceView = findViewById(R.id.sequence)
         flipper = findViewById(R.id.flipper)
 
+        findViewById<View>(R.id.delete).visibility = View.GONE
+
         addAddListeners(findViewById<View>(android.R.id.content).rootView, null)
 
         findViewById<View>(R.id.run).setOnClickListener { runOnce() }

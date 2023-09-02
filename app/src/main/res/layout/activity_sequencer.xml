@@ -91,71 +91,7 @@
                         android:textAllCaps="false" />
                 </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/addMotor"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/motor_icon"
-                        android:textAllCaps="false" />
-
-                    <Button
-                        android:id="@+id/addTimer"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/timer_icon"
-                        android:textAllCaps="false" />
-
-                    <Button
-                        android:id="@+id/addRandomCall"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/randomcall_icon"
-                        android:textAllCaps="false" />
-
-                    <Button
-                        android:id="@+id/addWaitForColor"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/waitforcolor_icon"
-                        android:textAllCaps="false" />
-
-                    <Button
-                        android:id="@+id/addExecIfColor"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/execifcolor_icon"
-                        android:textAllCaps="false" />
-
-                    <Button
-                        android:id="@+id/addExecIfColorX2"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/execIfColorX2_icon"
-                        android:textAllCaps="false" />
-
-                    <Button
-                        android:id="@+id/addDrawnControl"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/drawnControl_icon"
-                        android:textAllCaps="false" />
-
-                </LinearLayout>
+                <include layout="@layout/controls"/>
 
                 <LinearLayout
                     android:id="@+id/sequence"

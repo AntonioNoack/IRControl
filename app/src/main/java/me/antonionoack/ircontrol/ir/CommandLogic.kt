@@ -24,6 +24,7 @@ import me.antonionoack.ircontrol.ir.commands.DrawnControl
 import me.antonionoack.ircontrol.ir.commands.ExecIfColor
 import me.antonionoack.ircontrol.ir.commands.ExecIfColorX2
 import me.antonionoack.ircontrol.ir.commands.MotorSpeed
+import me.antonionoack.ircontrol.ir.commands.Quit
 import me.antonionoack.ircontrol.ir.commands.RandomCall
 import me.antonionoack.ircontrol.ir.commands.Sleep
 import me.antonionoack.ircontrol.ir.commands.WaitForColor
@@ -106,6 +107,11 @@ object CommandLogic {
                         's' -> {
                             n = Sleep(cmd.substring(1).toFloatOrNull() ?: continue)
                             v = sleep(n)
+                        }
+
+                        'q' -> {
+                            n = Quit()
+                            v = quit(n)
                         }
 
                         'r' -> {
@@ -238,6 +244,15 @@ object CommandLogic {
                 true
             }
         }
+        v.findViewById<TextView>(R.id.addQuit).apply {
+            setOnClickListener {
+                addQuit(n)
+            }
+            setOnLongClickListener {
+                toast("Hand-drawn control", false)
+                true
+            }
+        }
         v.findViewById<TextView>(R.id.addWaitForColor).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 setOnClickListener {
@@ -342,6 +357,13 @@ object CommandLogic {
         @SuppressLint("InflateParams")
         val v = layoutInflater.inflate(R.layout.set_sleep, null)
         setupDuration(v.findViewById(R.id.duration), n.duration) { n.duration = it }
+        finishSetup(v, n)
+        return v
+    }
+
+    fun MainActivity.quit(n: Quit): View {
+        @SuppressLint("InflateParams")
+        val v = layoutInflater.inflate(R.layout.set_quit, null)
         finishSetup(v, n)
         return v
     }
@@ -537,7 +559,7 @@ object CommandLogic {
         addAddListeners(v, n)
     }
 
-    fun MainActivity.addMotor(item: Any?) {
+    private fun MainActivity.addMotor(item: Any?) {
         val i = sequence.indexOf(item) + 1
         val n = MotorSpeed(true, 0, 0)
         val v = motorSpeed(n)
@@ -546,7 +568,7 @@ object CommandLogic {
         save()
     }
 
-    fun MainActivity.addSleep(item: Any?) {
+    private fun MainActivity.addSleep(item: Any?) {
         val i = sequence.indexOf(item) + 1
         val n = Sleep(1f)
         val v = sleep(n)
@@ -555,7 +577,16 @@ object CommandLogic {
         save()
     }
 
-    fun MainActivity.addRandomCall(item: Any?) {
+    private fun MainActivity.addQuit(item: Any?) {
+        val i = sequence.indexOf(item) + 1
+        val n = Quit()
+        val v = quit(n)
+        sequence.add(i, n)
+        sequenceView.addView(v, i)
+        save()
+    }
+
+    private fun MainActivity.addRandomCall(item: Any?) {
         val i = sequence.indexOf(item) + 1
         val n = RandomCall(emptyList())
         val v = randomCall(n)
@@ -564,7 +595,7 @@ object CommandLogic {
         save()
     }
 
-    fun MainActivity.addDrawnControl(item: Any?) {
+    private fun MainActivity.addDrawnControl(item: Any?) {
         val i = sequence.indexOf(item) + 1
         val n = DrawnControl(5f, emptyList())
         val v = drawnControl(n)
@@ -634,6 +665,7 @@ object CommandLogic {
             update()
             when (command) {
                 is Sleep -> doSleep(command.duration)
+                is Quit -> runId++
 
                 is MotorSpeed -> {
                     // R1, B1, R2, B2, R3, B3, R4, B4
