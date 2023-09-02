@@ -311,6 +311,7 @@ object CommandLogic {
                             n.speed = speed - 7
                             text = speedNames[speed]
                             dialog?.dismiss()
+                            save()
                         }
                     }
                     show(R.id.b14, 14)
@@ -379,8 +380,8 @@ object CommandLogic {
             dia.findViewById<View>(R.id.okButton)
                 .setOnClickListener { _ ->
                     n.speedChanges = dc.speedChanges
-                    save()
                     dia.dismiss()
+                    save()
                 }
             dia.show()
         }
