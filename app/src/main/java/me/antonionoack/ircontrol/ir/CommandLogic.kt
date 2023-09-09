@@ -5,8 +5,10 @@ import android.app.AlertDialog
 import android.app.AlertDialog.Builder
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.hardware.ConsumerIrManager
+import android.media.MediaPlayer
 import android.os.Build
 import android.text.InputType
 import android.view.View
@@ -23,15 +25,21 @@ import me.antonionoack.ircontrol.camera.CameraSensor.tryStartCamera
 import me.antonionoack.ircontrol.ir.commands.DrawnControl
 import me.antonionoack.ircontrol.ir.commands.ExecIfColor
 import me.antonionoack.ircontrol.ir.commands.ExecIfColorX2
+import me.antonionoack.ircontrol.ir.commands.ExecIfNotColorX2
 import me.antonionoack.ircontrol.ir.commands.MotorSpeed
 import me.antonionoack.ircontrol.ir.commands.Quit
 import me.antonionoack.ircontrol.ir.commands.RandomCall
 import me.antonionoack.ircontrol.ir.commands.Sleep
+import me.antonionoack.ircontrol.ir.commands.SoundFX
 import me.antonionoack.ircontrol.ir.commands.WaitForColor
 import me.antonionoack.ircontrol.ir.views.DrawingCommandsView
+import java.io.File
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.roundToInt
+
 
 object CommandLogic {
 
@@ -152,31 +160,41 @@ object CommandLogic {
                             } else continue
                         }
 
-                        'X' -> {
+                        'X', 'Y' -> {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                 val vs = cmd.substring(1).split(';')
                                 val names = vs.subList(9, vs.size)
                                 var elseIdx = names.indexOf("")
                                 if (elseIdx < 0) elseIdx = names.size
-                                n = ExecIfColorX2(
-                                    WaitForColor(
-                                        vs[0].toFloat(),
-                                        vs[1].toFloat(),
-                                        vs[2].toInt(16),
-                                        vs[3].toFloat()
-                                    ),
-                                    WaitForColor(
-                                        vs[4].toFloat(),
-                                        vs[5].toFloat(),
-                                        vs[6].toInt(16),
-                                        vs[7].toFloat(),
-                                    ),
-                                    vs[8].toFloat(),
-                                    names.subList(0, elseIdx).filter { it.isNotBlank() },
-                                    names.subList(elseIdx, names.size).filter { it.isNotBlank() }
+                                val wfc0 = WaitForColor(
+                                    vs[0].toFloat(),
+                                    vs[1].toFloat(),
+                                    vs[2].toInt(16),
+                                    vs[3].toFloat()
                                 )
-                                v = execIfColorX2(n)
+                                val wfc1 = WaitForColor(
+                                    vs[4].toFloat(),
+                                    vs[5].toFloat(),
+                                    vs[6].toInt(16),
+                                    vs[7].toFloat(),
+                                )
+                                val duration = vs[8].toFloat()
+                                val ifNames = names.subList(0, elseIdx).filter { it.isNotBlank() }
+                                val elseNames =
+                                    names.subList(elseIdx, names.size).filter { it.isNotBlank() }
+                                n = if (cmd[0] == 'X')
+                                    ExecIfColorX2(wfc0, wfc1, duration, ifNames, elseNames)
+                                else ExecIfNotColorX2(wfc0, wfc1, duration, ifNames, elseNames)
+                                v = execIfColorX2(n as ExecIfColorX2)
                             } else continue
+                        }
+
+                        'S' -> {
+                            val idx = cmd.indexOf(';')
+                            val volume = cmd.substring(1, idx).toFloat()
+                            val file = File(cmd.substring(idx+1))
+                            n = SoundFX(volume, file)
+                            v = soundFX(n)
                         }
 
                         'd' -> {
@@ -208,7 +226,7 @@ object CommandLogic {
     }
 
     fun MainActivity.addAddListeners(v: View, n: Any?) {
-        v.findViewById<TextView>(R.id.addMotor).apply {
+        v.findViewById<View>(R.id.addMotor).apply {
             setOnClickListener {
                 addMotor(n)
             }
@@ -217,7 +235,7 @@ object CommandLogic {
                 true
             }
         }
-        v.findViewById<TextView>(R.id.addTimer).apply {
+        v.findViewById<View>(R.id.addTimer).apply {
             setOnClickListener {
                 addSleep(n)
             }
@@ -226,7 +244,7 @@ object CommandLogic {
                 true
             }
         }
-        v.findViewById<TextView>(R.id.addRandomCall).apply {
+        v.findViewById<View>(R.id.addRandomCall).apply {
             setOnClickListener {
                 addRandomCall(n)
             }
@@ -235,7 +253,10 @@ object CommandLogic {
                 true
             }
         }
-        v.findViewById<TextView>(R.id.addDrawnControl).apply {
+        v.findViewById<View>(R.id.addSoundFX).setOnClickListener {
+            addSoundFX(n)
+        }
+        v.findViewById<View>(R.id.addDrawnControl).apply {
             setOnClickListener {
                 addDrawnControl(n)
             }
@@ -244,7 +265,7 @@ object CommandLogic {
                 true
             }
         }
-        v.findViewById<TextView>(R.id.addQuit).apply {
+        v.findViewById<View>(R.id.addQuit).apply {
             setOnClickListener {
                 addQuit(n)
             }
@@ -253,7 +274,7 @@ object CommandLogic {
                 true
             }
         }
-        v.findViewById<TextView>(R.id.addWaitForColor).apply {
+        v.findViewById<View>(R.id.addWaitForColor).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 setOnClickListener {
                     addWaitForColor(n)
@@ -264,7 +285,7 @@ object CommandLogic {
                 }
             } else visibility = View.GONE
         }
-        v.findViewById<TextView>(R.id.addExecIfColor).apply {
+        v.findViewById<View>(R.id.addExecIfColor).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 setOnClickListener {
                     addExecIfColor(n)
@@ -275,13 +296,24 @@ object CommandLogic {
                 }
             } else visibility = View.GONE
         }
-        v.findViewById<TextView>(R.id.addExecIfColorX2).apply {
+        v.findViewById<View>(R.id.addExecIfColorX2).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 setOnClickListener {
                     addExecIfColorX2(n)
                 }
                 setOnLongClickListener {
                     toast("Add exec-if-color2", false)
+                    true
+                }
+            } else visibility = View.GONE
+        }
+        v.findViewById<View>(R.id.addExecIfNotColorX2).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                setOnClickListener {
+                    addExecIfNotColorX2(n)
+                }
+                setOnLongClickListener {
+                    toast("Add exec-if-not-color2", false)
                     true
                 }
             } else visibility = View.GONE
@@ -413,13 +445,24 @@ object CommandLogic {
 
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     fun MainActivity.setupDuration(v: TextView, time0: Float, setTime: (Float) -> Unit) {
+        setupDuration(v, time0, "Sleep Duration in Seconds", "s", setTime)
+    }
+
+    @SuppressLint("SetTextI18n", "MissingInflatedId")
+    fun MainActivity.setupDuration(
+        v: TextView,
+        time0: Float,
+        title: String,
+        ext: String,
+        setTime: (Float) -> Unit
+    ) {
         val ctx = this
         var time = time0
         v.apply {
-            text = "${time0}s"
+            text = "$time0$ext"
             setOnClickListener {
                 val dia = Builder(ctx)
-                dia.setTitle("Sleep Duration in Seconds")
+                dia.setTitle(title)
                 val et = EditText(ctx)
                 et.setText(time.toString())
                 et.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
@@ -432,7 +475,7 @@ object CommandLogic {
                     if (w != null && w >= 0f) {
                         time = w
                         setTime(w)
-                        (it as TextView).text = "${w}s"
+                        (it as TextView).text = "$w$ext"
                     }
                     save()
                 }
@@ -447,6 +490,38 @@ object CommandLogic {
         setupRandomCallList(v.findViewById(R.id.numCallsId), n.names) { n.names = it }
         finishSetup(v, n)
         return v
+    }
+
+    private fun MainActivity.soundFX(n: SoundFX): View {
+        @SuppressLint("InflateParams")
+        val v = layoutInflater.inflate(R.layout.set_soundfx, null)
+        setupDuration(v.findViewById(R.id.volume), n.volume, "Set Volume Multiplier 0-1", "x") {
+            n.volume = it
+        }
+        v.findViewById<View>(R.id.fileChooser).setOnClickListener {
+            val intent = Intent()
+            intent.type = "audio/*"
+            intent.action = Intent.ACTION_GET_CONTENT
+            currentSoundFX = n
+            soundFileChooser.launch(intent)
+        }
+        finishSetup(v, n)
+        return v
+    }
+
+    fun getMD5(source: ByteArray): String? {
+        lateinit var md5: MessageDigest
+        try {
+            md5 = MessageDigest.getInstance("MD5")
+            md5.update(source)
+        } catch (e: NoSuchAlgorithmException) {
+            return null
+        }
+        val builder = StringBuilder()
+        for (byte in md5.digest()) {
+            builder.append(String.format("%02X", byte))
+        }
+        return builder.toString()
     }
 
     @SuppressLint("SetTextI18n", "MissingInflatedId")
@@ -518,7 +593,8 @@ object CommandLogic {
     fun MainActivity.execIfColorX2(n: ExecIfColorX2): View {
         @SuppressLint("InflateParams")
         val v = layoutInflater.inflate(R.layout.set_waitforcolor, null)
-        v.findViewById<TextView>(R.id.title).text = "Color-IfElse2"
+        v.findViewById<TextView>(R.id.title).text =
+            if (n is ExecIfNotColorX2) "Color-WaitUntilDifferent" else "Color-IfElse2"
         val colorView0 = v.findViewById<View>(R.id.colorId0)
         colorView0.setBackgroundColor(n.wfc0.color or black)
         colorView0.setOnClickListener {
@@ -536,7 +612,8 @@ object CommandLogic {
             }
         }
         setupRandomCallList(v.findViewById(R.id.numCallsId1), n.ifNames) { n.ifNames = it }
-        setupRandomCallList(v.findViewById(R.id.numCallsId2), n.elseNames) { n.elseNames = it }
+        if (n is ExecIfNotColorX2) v.findViewById<View>(R.id.numCallsId2).visibility = View.GONE
+        else setupRandomCallList(v.findViewById(R.id.numCallsId2), n.elseNames) { n.elseNames = it }
         setupDuration(v.findViewById(R.id.duration), n.duration) { n.duration = it }
         finishSetup(v, n)
         return v
@@ -595,6 +672,15 @@ object CommandLogic {
         save()
     }
 
+    private fun MainActivity.addSoundFX(item: Any?) {
+        val i = sequence.indexOf(item) + 1
+        val n = SoundFX(1f, File(""))
+        val v = soundFX(n)
+        sequence.add(i, n)
+        sequenceView.addView(v, i)
+        save()
+    }
+
     private fun MainActivity.addDrawnControl(item: Any?) {
         val i = sequence.indexOf(item) + 1
         val n = DrawnControl(5f, emptyList())
@@ -628,6 +714,16 @@ object CommandLogic {
     fun MainActivity.addExecIfColorX2(item: Any?) {
         val i = sequence.indexOf(item) + 1
         val n = ExecIfColorX2()
+        val v = execIfColorX2(n)
+        sequence.add(i, n)
+        sequenceView.addView(v, i)
+        save()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun MainActivity.addExecIfNotColorX2(item: Any?) {
+        val i = sequence.indexOf(item) + 1
+        val n = ExecIfNotColorX2()
         val v = execIfColorX2(n)
         sequence.add(i, n)
         sequenceView.addView(v, i)
@@ -673,10 +769,32 @@ object CommandLogic {
                     Motor.values()[motorId].setSpeed(command.speed)
                 }
 
-                is RandomCall -> {
-                    // try to find function
-                    val name = command.names.randomOrNull()
-                    if (name != null) tryExecFunction(name, i)
+                is RandomCall -> tryExecFunction(command.names, i)
+
+                is SoundFX -> {
+                    // play sound
+                    runOnUiThread {
+                        try {
+                            val player = MediaPlayer()
+                            player.setDataSource(command.file.absolutePath)
+                            player.setVolume(command.volume, command.volume)
+                            player.setOnPreparedListener {
+                                player.start()
+                                thread(name = "SoundWatcher") {
+                                    Thread.sleep(250)
+                                    while (player.isPlaying && runId == id) {
+                                        Thread.sleep(50)
+                                    }
+                                    if (player.isPlaying) runOnUiThread {
+                                        player.stop()
+                                    }
+                                }
+                            }
+                            player.prepareAsync()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
                 }
 
                 is ExecIfColor -> {
@@ -704,8 +822,42 @@ object CommandLogic {
 
                         val names = if (CameraSensor.isCloseEnough) command.ifNames
                         else command.elseNames
-                        val name = names.randomOrNull()
-                        if (name != null) tryExecFunction(name, i)
+                        tryExecFunction(names, i)
+
+                        shallRun = false
+                        waitForColorCallback = null
+                    }
+                }
+
+                is ExecIfNotColorX2 -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                        var shallRun = true
+                        var isGood = false
+                        var lastCloseTime = System.nanoTime()
+                        val targetDuration = (command.duration * 1e9).toLong()
+
+                        tryStartCamera(listOf(command.wfc0, command.wfc1), true) {
+                            val isCloseEnough = it != null &&
+                                    (CameraSensor.targets.getOrNull(0)?.color == command.wfc0.color ||
+                                            CameraSensor.targets.getOrNull(1)?.color == command.wfc1.color) &&
+                                    CameraSensor.isCloseEnough
+                            if (it == null) shallRun = false
+                            val time = System.nanoTime()
+                            if (isCloseEnough) lastCloseTime = time
+                            else if (time > lastCloseTime + targetDuration) {
+                                // color was different for long enough
+                                shallRun = false
+                                isGood = true
+                            }
+                            !shallRun
+                        }
+
+                        while (runId == id && shallRun) Thread.sleep(1)
+
+                        val names = if (isGood) command.ifNames
+                        else command.elseNames
+                        tryExecFunction(names, i)
 
                         shallRun = false
                         waitForColorCallback = null
@@ -737,8 +889,7 @@ object CommandLogic {
 
                         val names = if (CameraSensor.isCloseEnough) command.ifNames
                         else command.elseNames
-                        val name = names.randomOrNull()
-                        if (name != null) tryExecFunction(name, i)
+                        tryExecFunction(names, i)
 
                         shallRun = false
                         waitForColorCallback = null
@@ -855,7 +1006,13 @@ object CommandLogic {
         update()
     }
 
-    private fun MainActivity.tryExecFunction(name: String, i: Int) {
+
+    private fun MainActivity.tryExecFunction(names: List<String>, i: Int) {
+        tryExecFunction(names.randomOrNull(), i)
+    }
+
+    private fun MainActivity.tryExecFunction(name: String?, i: Int) {
+        name ?: return
         val function = projectNames.firstOrNull { it == name }
             ?: projectNames.firstOrNull { it.equals(name, true) }
         if (function == null) {

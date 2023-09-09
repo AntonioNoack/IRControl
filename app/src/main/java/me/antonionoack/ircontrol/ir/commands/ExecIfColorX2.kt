@@ -2,7 +2,7 @@ package me.antonionoack.ircontrol.ir.commands
 
 import me.antonionoack.ircontrol.ir.Command
 
-class ExecIfColorX2(
+open class ExecIfColorX2(
     val wfc0: WaitForColor,
     val wfc1: WaitForColor,
     var duration: Float,

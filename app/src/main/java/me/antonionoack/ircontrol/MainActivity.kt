@@ -1,5 +1,7 @@
 package me.antonionoack.ircontrol
 
+import android.app.Activity
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Build
@@ -10,7 +12,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import android.widget.ViewFlipper
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toFile
 import me.antonionoack.ircontrol.Projects.setupProjectList
 import me.antonionoack.ircontrol.Voice.ASR_PERMISSION_REQUEST_CODE
 import me.antonionoack.ircontrol.Voice.handleSpeechBegin
@@ -19,17 +24,21 @@ import me.antonionoack.ircontrol.Voice.setupVoiceButton
 import me.antonionoack.ircontrol.camera.CameraSensor.CAMERA_PERMISSIONS_ID
 import me.antonionoack.ircontrol.camera.CameraSensor.allPermissionsGranted
 import me.antonionoack.ircontrol.camera.CameraSensor.startCamera
+import me.antonionoack.ircontrol.ir.CommandLogic
 import me.antonionoack.ircontrol.ir.CommandLogic.addAddListeners
 import me.antonionoack.ircontrol.ir.CommandLogic.loadCurrentProject
 import me.antonionoack.ircontrol.ir.CommandLogic.loadProjects
 import me.antonionoack.ircontrol.ir.CommandLogic.runOnce
 import me.antonionoack.ircontrol.ir.CommandLogic.runRepeatedly
+import me.antonionoack.ircontrol.ir.CommandLogic.save
 import me.antonionoack.ircontrol.ir.CommandLogic.setupSeekBar
 import me.antonionoack.ircontrol.ir.CommandLogic.startMotorController
 import me.antonionoack.ircontrol.ir.CommandLogic.stopMotorController
 import me.antonionoack.ircontrol.ir.CommandLogic.stopRunning
 import me.antonionoack.ircontrol.ir.Motor
+import me.antonionoack.ircontrol.ir.commands.SoundFX
 import me.antonionoack.ircontrol.ir.commands.WaitForColor
+import java.io.File
 import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
@@ -47,11 +56,15 @@ class MainActivity : AppCompatActivity() {
 
     var unbindCamera: (() -> Unit)? = null
 
+    lateinit var soundFileChooser: ActivityResultLauncher<Intent>
+
+    var currentSoundFX: SoundFX? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_all)
 
-        Thread.sleep(1000)
+        // todo scan for no longer needed soundfx files
 
         preferences = getPreferences(MODE_PRIVATE)
         sequenceView = findViewById(R.id.sequence)
@@ -85,6 +98,25 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.manualControl).setOnClickListener {
             flipper.displayedChild = 1
         }
+
+        soundFileChooser =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                val n = currentSoundFX
+                if (result.resultCode == Activity.RESULT_OK && result.data != null && n != null) {
+                    // Handle the result here
+                    val selectedAudioUri = result.data!!.data!!
+                    // Do something with the selected audio file URI
+                    val bytes = contentResolver.openInputStream(selectedAudioUri)!!.use { it.readBytes() }
+                    val hash = CommandLogic.getMD5(bytes) ?: bytes.contentHashCode()
+                    val name = "soundfx.$hash.mp3"
+                    val oldFile = n.file
+                    if (oldFile.exists()) oldFile.delete()
+                    val newFile = File(filesDir, name)
+                    newFile.writeBytes(bytes)
+                    n.file = newFile
+                    save()
+                }
+            }
 
     }
 

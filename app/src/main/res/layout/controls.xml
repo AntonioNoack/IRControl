@@ -73,6 +73,17 @@
         android:text="@string/execIfColorX2_icon" />
 
     <TextView
+        android:id="@+id/addExecIfNotColorX2"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="@string/execIfNotColorX2_icon" />
+
+    <TextView
         android:id="@+id/addDrawnControl"
         android:textColor="#aaa"
         android:layout_width="40dp"
@@ -82,6 +93,18 @@
         android:focusable="true"
         android:textSize="20sp"
         android:text="@string/drawnControl_icon"
+        android:textAllCaps="false" />
+
+    <TextView
+        android:id="@+id/addSoundFX"
+        android:textColor="#aaa"
+        android:layout_width="40dp"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:textSize="20sp"
+        android:text="@string/sound_fx_icon"
         android:textAllCaps="false" />
 
     <TextView
