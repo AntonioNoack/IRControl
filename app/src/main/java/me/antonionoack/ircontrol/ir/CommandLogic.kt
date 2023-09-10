@@ -11,6 +11,7 @@ import android.hardware.ConsumerIrManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.text.InputType
+import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.annotation.RequiresApi
@@ -25,20 +26,23 @@ import me.antonionoack.ircontrol.camera.CameraSensor.tryStartCamera
 import me.antonionoack.ircontrol.ir.commands.DrawnControl
 import me.antonionoack.ircontrol.ir.commands.ExecIfColor
 import me.antonionoack.ircontrol.ir.commands.ExecIfColorX2
-import me.antonionoack.ircontrol.ir.commands.ExecIfNotColorX2
 import me.antonionoack.ircontrol.ir.commands.MotorSpeed
 import me.antonionoack.ircontrol.ir.commands.Quit
 import me.antonionoack.ircontrol.ir.commands.RandomCall
 import me.antonionoack.ircontrol.ir.commands.Sleep
 import me.antonionoack.ircontrol.ir.commands.SoundFX
 import me.antonionoack.ircontrol.ir.commands.WaitForColor
+import me.antonionoack.ircontrol.ir.commands.WaitForColorChange
+import me.antonionoack.ircontrol.ir.commands.WaitForNotColor
 import me.antonionoack.ircontrol.ir.views.DrawingCommandsView
 import java.io.File
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import kotlin.concurrent.thread
 import kotlin.math.abs
+import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 
 object CommandLogic {
@@ -141,6 +145,19 @@ object CommandLogic {
                             } else continue
                         }
 
+                        'w' -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                val vs = cmd.substring(1).split(';')
+                                n = WaitForColorChange(
+                                    vs[0].toFloat(),
+                                    vs[1].toFloat(),
+                                    // vs[2] is ignored
+                                    vs[3].toFloat()
+                                )
+                                v = waitForColor(n)
+                            } else continue
+                        }
+
                         'x' -> {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                 val vs = cmd.substring(1).split(';')
@@ -184,7 +201,7 @@ object CommandLogic {
                                     names.subList(elseIdx, names.size).filter { it.isNotBlank() }
                                 n = if (cmd[0] == 'X')
                                     ExecIfColorX2(wfc0, wfc1, duration, ifNames, elseNames)
-                                else ExecIfNotColorX2(wfc0, wfc1, duration, ifNames, elseNames)
+                                else WaitForNotColor(wfc0, wfc1, duration, ifNames, elseNames)
                                 v = execIfColorX2(n as ExecIfColorX2)
                             } else continue
                         }
@@ -192,7 +209,7 @@ object CommandLogic {
                         'S' -> {
                             val idx = cmd.indexOf(';')
                             val volume = cmd.substring(1, idx).toFloat()
-                            val file = File(cmd.substring(idx+1))
+                            val file = File(cmd.substring(idx + 1))
                             n = SoundFX(volume, file)
                             v = soundFX(n)
                         }
@@ -225,10 +242,11 @@ object CommandLogic {
         return Pair(sequence, views)
     }
 
-    fun MainActivity.addAddListeners(v: View, n: Any?) {
+    fun MainActivity.addAddListeners(v: Dialog, n: Any?, di: Int) {
         v.findViewById<View>(R.id.addMotor).apply {
             setOnClickListener {
-                addMotor(n)
+                addMotor(n, di)
+                v.dismiss()
             }
             setOnLongClickListener {
                 toast("Add a motor modifier", false)
@@ -237,7 +255,8 @@ object CommandLogic {
         }
         v.findViewById<View>(R.id.addTimer).apply {
             setOnClickListener {
-                addSleep(n)
+                addSleep(n, di)
+                v.dismiss()
             }
             setOnLongClickListener {
                 toast("Add a time delay", false)
@@ -246,7 +265,8 @@ object CommandLogic {
         }
         v.findViewById<View>(R.id.addRandomCall).apply {
             setOnClickListener {
-                addRandomCall(n)
+                addRandomCall(n, di)
+                v.dismiss()
             }
             setOnLongClickListener {
                 toast("Add random call list", false)
@@ -254,11 +274,13 @@ object CommandLogic {
             }
         }
         v.findViewById<View>(R.id.addSoundFX).setOnClickListener {
-            addSoundFX(n)
+            addSoundFX(n, di)
+            v.dismiss()
         }
         v.findViewById<View>(R.id.addDrawnControl).apply {
             setOnClickListener {
-                addDrawnControl(n)
+                addDrawnControl(n, di)
+                v.dismiss()
             }
             setOnLongClickListener {
                 toast("Hand-drawn control", false)
@@ -267,7 +289,8 @@ object CommandLogic {
         }
         v.findViewById<View>(R.id.addQuit).apply {
             setOnClickListener {
-                addQuit(n)
+                addQuit(n, di)
+                v.dismiss()
             }
             setOnLongClickListener {
                 toast("Hand-drawn control", false)
@@ -277,7 +300,8 @@ object CommandLogic {
         v.findViewById<View>(R.id.addWaitForColor).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 setOnClickListener {
-                    addWaitForColor(n)
+                    addWaitForColor(n, di)
+                    v.dismiss()
                 }
                 setOnLongClickListener {
                     toast("Add wait-for-color", false)
@@ -288,7 +312,8 @@ object CommandLogic {
         v.findViewById<View>(R.id.addExecIfColor).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 setOnClickListener {
-                    addExecIfColor(n)
+                    addExecIfColor(n, di)
+                    v.dismiss()
                 }
                 setOnLongClickListener {
                     toast("Add exec-if-color", false)
@@ -299,7 +324,8 @@ object CommandLogic {
         v.findViewById<View>(R.id.addExecIfColorX2).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 setOnClickListener {
-                    addExecIfColorX2(n)
+                    addExecIfColorX2(n, di)
+                    v.dismiss()
                 }
                 setOnLongClickListener {
                     toast("Add exec-if-color2", false)
@@ -310,7 +336,8 @@ object CommandLogic {
         v.findViewById<View>(R.id.addExecIfNotColorX2).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 setOnClickListener {
-                    addExecIfNotColorX2(n)
+                    addExecIfNotColorX2(n, di)
+                    v.dismiss()
                 }
                 setOnLongClickListener {
                     toast("Add exec-if-not-color2", false)
@@ -318,6 +345,22 @@ object CommandLogic {
                 }
             } else visibility = View.GONE
         }
+        v.findViewById<View>(R.id.addWaitForColorChange).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                setOnClickListener {
+                    addWaitForColorChange(n, di)
+                    v.dismiss()
+                }
+                setOnLongClickListener {
+                    toast("Add exec-if-not-color2", false)
+                    true
+                }
+            } else visibility = View.GONE
+        }
+        v.findViewById<View>(R.id.cancelButton)
+            .setOnClickListener {
+                v.dismiss()
+            }
     }
 
     @SuppressLint("SetTextI18n")
@@ -565,7 +608,9 @@ object CommandLogic {
     fun MainActivity.waitForColor(n: WaitForColor): View {
         @SuppressLint("InflateParams")
         val v = layoutInflater.inflate(R.layout.set_waitforcolor, null)
-        if (n is ExecIfColor) v.findViewById<TextView>(R.id.title).text = "Color-IfElse"
+        val titleView = v.findViewById<TextView>(R.id.title)
+        if (n is ExecIfColor) titleView.text = "Color-IfElse"
+        else if (n is WaitForColorChange) titleView.text = "Wait For Color-Change"
         val colorView = v.findViewById<View>(R.id.colorId0)
         colorView.setBackgroundColor(n.color or black)
         v.findViewById<View>(R.id.colorId1).visibility = View.GONE
@@ -594,7 +639,7 @@ object CommandLogic {
         @SuppressLint("InflateParams")
         val v = layoutInflater.inflate(R.layout.set_waitforcolor, null)
         v.findViewById<TextView>(R.id.title).text =
-            if (n is ExecIfNotColorX2) "Color-WaitUntilDifferent" else "Color-IfElse2"
+            if (n is WaitForNotColor) "Color-WaitUntilDifferent" else "Color-IfElse2"
         val colorView0 = v.findViewById<View>(R.id.colorId0)
         colorView0.setBackgroundColor(n.wfc0.color or black)
         colorView0.setOnClickListener {
@@ -611,9 +656,13 @@ object CommandLogic {
                 false
             }
         }
-        setupRandomCallList(v.findViewById(R.id.numCallsId1), n.ifNames) { n.ifNames = it }
-        if (n is ExecIfNotColorX2) v.findViewById<View>(R.id.numCallsId2).visibility = View.GONE
-        else setupRandomCallList(v.findViewById(R.id.numCallsId2), n.elseNames) { n.elseNames = it }
+        if (n is WaitForNotColor) {
+            v.findViewById<View>(R.id.numCallsId1).visibility = View.GONE
+            v.findViewById<View>(R.id.numCallsId2).visibility = View.GONE
+        } else {
+            setupRandomCallList(v.findViewById(R.id.numCallsId1), n.ifNames) { n.ifNames = it }
+            setupRandomCallList(v.findViewById(R.id.numCallsId2), n.elseNames) { n.elseNames = it }
+        }
         setupDuration(v.findViewById(R.id.duration), n.duration) { n.duration = it }
         finishSetup(v, n)
         return v
@@ -625,19 +674,61 @@ object CommandLogic {
         return waitForColor(n)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun MainActivity.finishSetup(v: View, n: Command) {
-        v.findViewById<TextView>(R.id.delete)
+        v.findViewById<View>(R.id.delete)
             .setOnClickListener {
                 // remove this element
                 sequence.remove(n)
                 sequenceView.removeView(v)
                 save()
             }
-        addAddListeners(v, n)
+        var downTime = 0L
+        var isBottom = false
+        var motion = 0f
+        var lx = 0f
+        var ly = 0f
+        v.findViewById<View>(R.id.addCommand)
+            .setOnTouchListener { vi, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        downTime = System.nanoTime()
+                        isBottom = event.y > vi.y + vi.height / 2
+                        lx = event.x
+                        ly = event.y
+                        motion = 0f
+                    }
+
+                    MotionEvent.ACTION_MOVE -> {
+                        val dx = lx - event.x
+                        val dy = ly - event.y
+                        motion += sqrt(dx * dx + dy * dy)
+                        lx = event.x
+                        ly = event.y
+                    }
+
+                    MotionEvent.ACTION_UP -> {
+                        val pressTime = (downTime - System.nanoTime()) / 1e9
+                        if (pressTime < 0.3 && motion < 20) {
+                            // a click
+                            openAddCommandDialog(n, if (isBottom) 1 else 0)
+                        }
+                    }
+                }
+                true
+            }
     }
 
-    private fun MainActivity.addMotor(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    fun MainActivity.openAddCommandDialog(n: Any?, di: Int) {
+        val dialog =
+            Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        dialog.setContentView(R.layout.dialog_add_command)
+        addAddListeners(dialog, n, di)
+        dialog.show()
+    }
+
+    private fun MainActivity.addMotor(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = MotorSpeed(true, 0, 0)
         val v = motorSpeed(n)
         sequence.add(i, n)
@@ -645,8 +736,8 @@ object CommandLogic {
         save()
     }
 
-    private fun MainActivity.addSleep(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    private fun MainActivity.addSleep(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = Sleep(1f)
         val v = sleep(n)
         sequence.add(i, n)
@@ -654,8 +745,8 @@ object CommandLogic {
         save()
     }
 
-    private fun MainActivity.addQuit(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    private fun MainActivity.addQuit(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = Quit()
         val v = quit(n)
         sequence.add(i, n)
@@ -663,8 +754,8 @@ object CommandLogic {
         save()
     }
 
-    private fun MainActivity.addRandomCall(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    private fun MainActivity.addRandomCall(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = RandomCall(emptyList())
         val v = randomCall(n)
         sequence.add(i, n)
@@ -672,8 +763,8 @@ object CommandLogic {
         save()
     }
 
-    private fun MainActivity.addSoundFX(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    private fun MainActivity.addSoundFX(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = SoundFX(1f, File(""))
         val v = soundFX(n)
         sequence.add(i, n)
@@ -681,8 +772,8 @@ object CommandLogic {
         save()
     }
 
-    private fun MainActivity.addDrawnControl(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    private fun MainActivity.addDrawnControl(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = DrawnControl(5f, emptyList())
         val v = drawnControl(n)
         sequence.add(i, n)
@@ -691,8 +782,8 @@ object CommandLogic {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun MainActivity.addWaitForColor(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    fun MainActivity.addWaitForColor(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = WaitForColor()
         val v = waitForColor(n)
         sequence.add(i, n)
@@ -701,8 +792,18 @@ object CommandLogic {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun MainActivity.addExecIfColor(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    fun MainActivity.addWaitForColorChange(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
+        val n = WaitForColorChange()
+        val v = waitForColor(n)
+        sequence.add(i, n)
+        sequenceView.addView(v, i)
+        save()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun MainActivity.addExecIfColor(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = ExecIfColor()
         val v = execIfColor(n)
         sequence.add(i, n)
@@ -711,8 +812,8 @@ object CommandLogic {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun MainActivity.addExecIfColorX2(item: Any?) {
-        val i = sequence.indexOf(item) + 1
+    fun MainActivity.addExecIfColorX2(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = ExecIfColorX2()
         val v = execIfColorX2(n)
         sequence.add(i, n)
@@ -721,9 +822,9 @@ object CommandLogic {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun MainActivity.addExecIfNotColorX2(item: Any?) {
-        val i = sequence.indexOf(item) + 1
-        val n = ExecIfNotColorX2()
+    fun MainActivity.addExecIfNotColorX2(item: Any?, di: Int) {
+        val i = min(sequence.indexOf(item) + di, sequence.size)
+        val n = WaitForNotColor()
         val v = execIfColorX2(n)
         sequence.add(i, n)
         sequenceView.addView(v, i)
@@ -731,17 +832,26 @@ object CommandLogic {
     }
 
     private fun MainActivity.runSequence(id: Int) {
+
         var i = 0
         var li = -1
         var lastView: TextView? = null
         var slept = false
+
+        val scrollView = findViewById<ScrollView>(R.id.verticalScroller)
+
         fun MainActivity.update() {
             runOnUiThread {
                 val j = i
                 if (j != li) {
                     lastView?.setTextColor(0)
-                    lastView = sequenceView.getChildAt(j - 1)?.findViewById(R.id.active)
-                    lastView?.setTextColor(-1)
+                    val thisView = sequenceView.getChildAt(j - 1)
+                        ?.findViewById<TextView>(R.id.active)
+                    if (thisView != null && thisView !== lastView) {
+                        scrollView.requestChildFocus(thisView, thisView)
+                        thisView.setTextColor(-1)
+                    }
+                    lastView = thisView
                     li = j
                 }
             }
@@ -829,7 +939,7 @@ object CommandLogic {
                     }
                 }
 
-                is ExecIfNotColorX2 -> {
+                is WaitForNotColor -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
                         var shallRun = true
@@ -896,17 +1006,34 @@ object CommandLogic {
                     }
                 }
 
+                is WaitForColorChange -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        var shallRun = true
+                        var isGood = false
+                        tryStartCamera(command, true) {
+                            if (it != null && CameraSensor.isDifferentEnough) isGood = true
+                            if (it == null || isGood) shallRun = false
+                            !shallRun
+                        }
+                        while (runId == id && shallRun) {
+                            Thread.sleep(1)
+                        }
+                        shallRun = false
+                        waitForColorCallback = null
+                    }
+                }
+
                 is WaitForColor -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         var shallRun = true
-                        var isCloseEnough = false
+                        var isGood = false
                         tryStartCamera(command, true) {
                             if (it != null &&
                                 CameraSensor.targets.firstOrNull()?.color == command.color &&
                                 CameraSensor.isCloseEnough
-                            ) isCloseEnough =
+                            ) isGood =
                                 true
-                            if (it == null || isCloseEnough) shallRun = false
+                            if (it == null || isGood) shallRun = false
                             !shallRun
                         }
                         while (runId == id && shallRun) {

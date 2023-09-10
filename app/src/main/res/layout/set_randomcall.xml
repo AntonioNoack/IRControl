@@ -3,20 +3,12 @@
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="#333539"
-    android:padding="5dp">
+    android:background="@color/background">
+
+    <include layout="@layout/controls"/>
 
     <TextView
-        android:id="@+id/active"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:textColor="#0000"
-        android:textSize="20sp"
-        android:text=">" />
-
-    <TextView
+        android:layout_marginTop="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingLeft="10dp"
@@ -26,6 +18,7 @@
         android:text="@string/random_call" />
 
     <TextView
+        android:layout_marginTop="5dp"
         android:id="@+id/numCallsId"
         android:textColor="@color/black"
         android:layout_width="35dp"
@@ -37,6 +30,6 @@
         android:textSize="20sp"
         android:text="7" />
 
-    <include layout="@layout/controls"/>
+    <include layout="@layout/controls2"/>
 
 </LinearLayout>

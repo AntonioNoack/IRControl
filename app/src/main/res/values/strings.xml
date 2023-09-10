@@ -37,4 +37,13 @@
     <string name="quit_icon">🛑</string>
     <string name="sound_fx_title">Sound FX</string>
     <string name="sound_fx_icon">📢</string>
+    <string name="add_motor">⚡ Motor</string>
+    <string name="add_time_delay">🕒 Time Delay</string>
+    <string name="add_random_function_call">🎲 Random-Function Call</string>
+    <string name="add_waiting_for_color">📷 Waiting For Color</string>
+    <string name="add_execute_if_color">📸 Execute If Color</string>
+    <string name="add_quit_execution">🛑 Quit Execution</string>
+    <string name="add_new_command">Add New Command</string>
+    <string name="add_sound_effect">📢 Sound Effect</string>
+    <string name="add_drawn_motor_control">🎨 Drawn Motor Control</string>
 </resources>

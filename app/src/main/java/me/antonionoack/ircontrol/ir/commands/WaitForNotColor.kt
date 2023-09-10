@@ -1,6 +1,6 @@
 package me.antonionoack.ircontrol.ir.commands
 
-class ExecIfNotColorX2 : ExecIfColorX2 {
+class WaitForNotColor : ExecIfColorX2 {
 
     constructor(
         wfc0: WaitForColor, wfc1: WaitForColor, duration: Float,
@@ -14,7 +14,7 @@ class ExecIfNotColorX2 : ExecIfColorX2 {
                 "$duration;${ifNames.joinToString(";")};;${elseNames.joinToString(";")}"
     }
 
-    fun set(src: ExecIfNotColorX2) {
+    fun set(src: WaitForNotColor) {
         wfc0.set(src.wfc0)
         wfc1.set(src.wfc1)
     }

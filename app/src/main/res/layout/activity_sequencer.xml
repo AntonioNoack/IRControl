@@ -4,7 +4,7 @@
     android:id="@+id/sequencer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#333539"
+    android:background="@color/background"
     tools:context=".MainActivity">
 
     <LinearLayout
@@ -18,90 +18,137 @@
             android:id="@+id/preview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#333539" />
+            android:background="@color/background" />
 
     </LinearLayout>
 
-    <ScrollView
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <HorizontalScrollView
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-            <LinearLayout
+            <Space
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="1dp"/>
+
+            <Button
+                android:id="@+id/voiceTest"
+                style="@style/BetterButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp">
+                android:text="@string/enableVoiceRecognition"
+                android:textAllCaps="false" />
+
+            <Space
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="1dp"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/white" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="1dp"/>
+
+            <Button
+                android:id="@+id/run"
+                style="@style/BetterButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="@string/run_button"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/repeat"
+                style="@style/BetterButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="@string/repeat_button"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/stopSequence"
+                style="@style/BetterButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="@string/stop_button"
+                android:textAllCaps="false" />
+
+            <Space
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="1dp"/>
+
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/verticalScroller"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp">
 
-                    <Button
-                        android:id="@+id/voiceTest"
-                        style="@style/BetterButton"
+                    <ImageView
+                        android:id="@+id/addCommandUpper"
+                        android:textColor="#aaa"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/upper_plus_icon"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <LinearLayout
+                        android:id="@+id/sequence"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/enableVoiceRecognition"
-                        android:textAllCaps="false" />
+                        android:orientation="vertical">
 
+                        <include layout="@layout/set_motor"/>
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/addCommandLower"
+                        android:textColor="#aaa"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/lower_plus_icon"
+                        android:clickable="true"
+                        android:focusable="true"/>
                 </LinearLayout>
+            </HorizontalScrollView>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/white" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/run"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/run_button"
-                        android:textAllCaps="false" />
-
-                    <Button
-                        android:id="@+id/repeat"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/repeat_button"
-                        android:textAllCaps="false" />
-
-                    <Button
-                        android:id="@+id/stopSequence"
-                        style="@style/BetterButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="5dp"
-                        android:text="@string/stop_button"
-                        android:textAllCaps="false" />
-                </LinearLayout>
-
-                <include layout="@layout/controls"/>
-
-                <LinearLayout
-                    android:id="@+id/sequence"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                </LinearLayout>
-            </LinearLayout>
-        </HorizontalScrollView>
-
-    </ScrollView>
+        </ScrollView>
+    </LinearLayout>
 </FrameLayout>

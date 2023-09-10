@@ -3,20 +3,12 @@
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="#333539"
-    android:padding="5dp">
+    android:background="@color/background">
+
+    <include layout="@layout/controls"/>
 
     <TextView
-        android:id="@+id/active"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:textColor="#0000"
-        android:textSize="20sp"
-        android:text=">" />
-
-    <TextView
+        android:layout_marginTop="5dp"
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,12 +19,14 @@
         android:text="Wait For Color" />
 
     <View
+        android:layout_marginTop="5dp"
         android:id="@+id/colorId0"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:background="#000"/>
 
     <View
+        android:layout_marginTop="5dp"
         android:id="@+id/colorId1"
         android:layout_marginLeft="10dp"
         android:layout_width="30dp"
@@ -40,6 +34,7 @@
         android:background="#000"/>
 
     <TextView
+        android:layout_marginTop="5dp"
         android:id="@+id/numCallsId1"
         android:textColor="@color/black"
         android:layout_marginLeft="10dp"
@@ -53,6 +48,7 @@
         android:text="7" />
 
     <TextView
+        android:layout_marginTop="5dp"
         android:id="@+id/numCallsId2"
         android:textColor="@color/black"
         android:layout_marginLeft="10dp"
@@ -66,6 +62,7 @@
         android:text="3" />
 
     <TextView
+        android:layout_marginTop="5dp"
         android:id="@+id/duration"
         android:layout_marginLeft="10dp"
         android:layout_width="70dp"
@@ -78,6 +75,6 @@
         android:textSize="20sp"
         android:textColor="@color/black" />
 
-    <include layout="@layout/controls"/>
+    <include layout="@layout/controls2"/>
 
 </LinearLayout>

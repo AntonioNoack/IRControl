@@ -15,7 +15,6 @@ import android.widget.ViewFlipper
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.toFile
 import me.antonionoack.ircontrol.Projects.setupProjectList
 import me.antonionoack.ircontrol.Voice.ASR_PERMISSION_REQUEST_CODE
 import me.antonionoack.ircontrol.Voice.handleSpeechBegin
@@ -25,9 +24,9 @@ import me.antonionoack.ircontrol.camera.CameraSensor.CAMERA_PERMISSIONS_ID
 import me.antonionoack.ircontrol.camera.CameraSensor.allPermissionsGranted
 import me.antonionoack.ircontrol.camera.CameraSensor.startCamera
 import me.antonionoack.ircontrol.ir.CommandLogic
-import me.antonionoack.ircontrol.ir.CommandLogic.addAddListeners
 import me.antonionoack.ircontrol.ir.CommandLogic.loadCurrentProject
 import me.antonionoack.ircontrol.ir.CommandLogic.loadProjects
+import me.antonionoack.ircontrol.ir.CommandLogic.openAddCommandDialog
 import me.antonionoack.ircontrol.ir.CommandLogic.runOnce
 import me.antonionoack.ircontrol.ir.CommandLogic.runRepeatedly
 import me.antonionoack.ircontrol.ir.CommandLogic.save
@@ -70,9 +69,13 @@ class MainActivity : AppCompatActivity() {
         sequenceView = findViewById(R.id.sequence)
         flipper = findViewById(R.id.flipper)
 
-        findViewById<View>(R.id.delete).visibility = View.GONE
+        findViewById<View>(R.id.addCommandUpper).setOnClickListener {
+            openAddCommandDialog(null, 1)
+        }
 
-        addAddListeners(findViewById<View>(android.R.id.content).rootView, null)
+        findViewById<View>(R.id.addCommandLower).setOnClickListener {
+            openAddCommandDialog(null, Int.MAX_VALUE)
+        }
 
         findViewById<View>(R.id.run).setOnClickListener { runOnce() }
         findViewById<View>(R.id.repeat).setOnClickListener { runRepeatedly() }
@@ -106,7 +109,8 @@ class MainActivity : AppCompatActivity() {
                     // Handle the result here
                     val selectedAudioUri = result.data!!.data!!
                     // Do something with the selected audio file URI
-                    val bytes = contentResolver.openInputStream(selectedAudioUri)!!.use { it.readBytes() }
+                    val bytes =
+                        contentResolver.openInputStream(selectedAudioUri)!!.use { it.readBytes() }
                     val hash = CommandLogic.getMD5(bytes) ?: bytes.contentHashCode()
                     val name = "soundfx.$hash.mp3"
                     val oldFile = n.file

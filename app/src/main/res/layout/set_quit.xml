@@ -2,21 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
-    android:background="#333539"
-    android:orientation="horizontal"
-    android:padding="5dp">
+    android:background="@color/background"
+    android:orientation="horizontal">
+
+    <include layout="@layout/controls"/>
 
     <TextView
-        android:id="@+id/active"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:textColor="#0000"
-        android:textSize="20sp"
-        android:text=">" />
-
-    <TextView
+        android:layout_marginTop="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingLeft="10dp"
@@ -24,6 +16,6 @@
         android:text="@string/quit_title"
         android:textColor="@color/white" />
 
-    <include layout="@layout/controls"/>
+    <include layout="@layout/controls2"/>
 
 </LinearLayout>

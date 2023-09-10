@@ -26,6 +26,7 @@ import me.antonionoack.ircontrol.ir.CommandLogic.save
 import me.antonionoack.ircontrol.ir.commands.WaitForColor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -91,6 +92,26 @@ object CameraSensor {
         return p.buffer[p.buffer.position() + x * p.pixelStride + y * p.rowStride].toInt().and(255)
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun sampleSquare(p: PlaneProxy, x0: Int, y0: Int, ri: Int, w: Int, h: Int): Int {
+        var s = 0
+        val minX = max(x0 - ri, 0)
+        val minY = max(y0 - ri, 0)
+        val maxX = min(x0 + ri + 1, w)
+        val maxY = min(y0 + ri + 1, h)
+        val buffer = p.buffer
+        val stride = p.pixelStride
+        for (y in minY until maxY) {
+            var i = p.buffer.position() + minX * stride + y * p.rowStride
+            for (x in minX until maxX) {
+                s += buffer[i].toInt().and(255)
+                i += stride
+            }
+        }
+        val c = (maxY - minY) * (maxX - minX)
+        return s / c
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.startCamera(src: List<WaitForColor>) {
@@ -137,29 +158,30 @@ object CameraSensor {
 
     var targets = listOf<WaitForColor>()
     var isCloseEnough = false
+    var isDifferentEnough = false
 
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.startCamera(
-        w: View, dialog: Dialog?,
+        view: View, dialog: Dialog?,
         addTouchListener: Boolean
     ): List<WaitForColor> {
 
-        val preview1 = w.findViewById<PreviewView>(R.id.preview)
+        val preview1 = view.findViewById<PreviewView>(R.id.preview)
         preview1.visibility = View.VISIBLE
 
         var queryColor = false
 
-        val color0 = w.findViewById<View>(R.id.colorPreview0)
+        val color0 = view.findViewById<View>(R.id.colorPreview0)
         color0?.setBackgroundColor(0)
 
-        val color1 = w.findViewById<View>(R.id.colorPreview1)
+        val color1 = view.findViewById<View>(R.id.colorPreview1)
         color1?.setBackgroundColor(targets.first().color or black)
 
-        val crosshair = w.findViewById<View>(R.id.crosshair)
+        val crosshair = view.findViewById<View>(R.id.crosshair)
         crosshair?.invalidate()
 
-        val resultPreview = w.findViewById<TextView>(R.id.resultPreview)
+        val resultPreview = view.findViewById<TextView>(R.id.resultPreview)
         if (addTouchListener) preview1.setOnTouchListener { v, event ->
             if (v == preview1 &&
                 event.action == MotionEvent.ACTION_DOWN &&
@@ -204,15 +226,19 @@ object CameraSensor {
             analysis.setAnalyzer(cameraExecutor) { img ->
 
                 var isCloseEnough = false
+                var isDifferentEnough = false
                 for (target in targets) {
                     vx.set(target.rx, target.ry).rotate(-img.imageInfo.rotationDegrees)
 
+                    val w = img.width
+                    val h = img.height
+
                     // calculate sample coordinates
-                    val minSize = min(img.width, img.height)
-                    val ax = (vx.x * minSize + img.width * 0.5f).toInt()
-                    val ay = (vx.y * minSize + img.height * 0.5f).toInt()
-                    val cx = clamp(ax, 0, img.width - 1)
-                    val cy = clamp(ay, 0, img.height - 1)
+                    val minSize = min(w, h)
+                    val ax = (vx.x * minSize + w * 0.5f).toInt()
+                    val ay = (vx.y * minSize + h * 0.5f).toInt()
+                    val cx = clamp(ax, 0, w - 1)
+                    val cy = clamp(ay, 0, h - 1)
                     val ux = cx ushr 1
                     val uy = cy ushr 1
 
@@ -220,6 +246,24 @@ object CameraSensor {
                     val y = sample(img.planes[0], cx, cy)
                     val u = sample(img.planes[1], ux, uy)
                     val v = sample(img.planes[2], ux, uy)
+
+                    // only sample if necessary?
+                    val ry = 7 // 15x15
+                    val ru = 3 //  7x7
+                    val ys = sampleSquare(img.planes[0], cx, cy, ry, w, h)
+                    val us = sampleSquare(img.planes[1], ux, uy, ru, w shr 1, h shr 1)
+                    val vs = sampleSquare(img.planes[2], ux, uy, ru, w shr 1, h shr 1)
+                    if (target.ctr < 8) {
+                        val nc = target.ctr + 1
+                        target.avgY0 = (target.avgY0 * target.ctr + ys) / nc
+                        target.avgU0 = (target.avgU0 * target.ctr + us) / nc
+                        target.avgV0 = (target.avgV0 * target.ctr + vs) / nc
+                    } else {
+                        target.avgY0 = (target.avgY0 * 7 + ys) shr 3
+                        target.avgU0 = (target.avgU0 * 7 + us) shr 3
+                        target.avgV0 = (target.avgV0 * 7 + vs) shr 3
+                    }
+                    target.ctr++
 
                     // convert to rgb, and save it
                     val color = yuv2rgb(y, u, v)
@@ -236,15 +280,23 @@ object CameraSensor {
                     val maxDist = 255 * sqrt(3.0)
                     val dstColor = target.color
                     val dstColorYUV = rgb2yuv(dstColor)
-                    val dx = y - dstColorYUV.shr(16).and(255)
-                    val dy = u - dstColorYUV.shr(8).and(255)
-                    val dz = v - dstColorYUV.and(255)
-                    val dist = sqrt((dx * dx + dy * dy + dz * dz).toDouble()) / maxDist
+                    val dx0 = y - dstColorYUV.shr(16).and(255)
+                    val dy0 = u - dstColorYUV.shr(8).and(255)
+                    val dz0 = v - dstColorYUV.and(255)
+                    val dist0 = sqrt((dx0 * dx0 + dy0 * dy0 + dz0 * dz0).toDouble()) / maxDist
 
-                    isCloseEnough = isCloseEnough || dist < 1f - target.sensitivity
+                    // check if value is different enough from avg
+                    val dx1 = ys - target.avgY0
+                    val dy1 = us - target.avgU0
+                    val dz1 = vs - target.avgV0
+                    val dist1 = sqrt((dx1 * dx1 + dy1 * dy1 + dz1 * dz1).toDouble()) / maxDist
+
+                    isCloseEnough = isCloseEnough || dist0 < 1f - target.sensitivity
+                    isDifferentEnough = isDifferentEnough || (dist1 > 1f - target.sensitivity && target.ctr > 8)
 
                 }
                 CameraSensor.isCloseEnough = isCloseEnough
+                CameraSensor.isDifferentEnough = isDifferentEnough
 
                 if (waitForColorCallback?.invoke(targets.first()) == true) {
                     dialog?.dismiss()
