@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.pm.PackageManager
-import android.graphics.Matrix
 import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView

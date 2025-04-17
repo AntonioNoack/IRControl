@@ -9,6 +9,7 @@ import org.xmlpull.v1.XmlPullParser
  * When changing from one compiling PC to another, Android forces you to delete all data.
  * Therefore, we save the data by hand, and load it using this class.
  * */
+@Suppress("unused")
 object XMLSettingsLoader {
     fun loadNewSettings(data: String, dst: SharedPreferences) {
         val parser = Xml.newPullParser()

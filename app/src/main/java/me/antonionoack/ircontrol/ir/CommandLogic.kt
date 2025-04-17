@@ -9,7 +9,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.hardware.ConsumerIrManager
 import android.media.MediaPlayer
-import android.os.Build
 import android.text.InputType
 import android.view.MotionEvent
 import android.view.View
@@ -19,7 +18,6 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.core.math.MathUtils
 import me.antonionoack.ircontrol.MainActivity
 import me.antonionoack.ircontrol.Projects.projectName

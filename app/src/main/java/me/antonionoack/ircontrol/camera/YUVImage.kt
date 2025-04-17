@@ -88,6 +88,7 @@ class YUVImage(
                     clamp(b, 0, 255)
         }
 
+        @Suppress("unused")
         private fun rgb2yuv(rgb: Int): Int {
             val r = rgb.shr(16).and(255)
             val g = rgb.shr(8).and(255)

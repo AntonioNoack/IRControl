@@ -19,7 +19,6 @@ import me.antonionoack.ircontrol.Voice.ASR_PERMISSION_REQUEST_CODE
 import me.antonionoack.ircontrol.Voice.handleSpeechBegin
 import me.antonionoack.ircontrol.Voice.handleSpeechEnd
 import me.antonionoack.ircontrol.Voice.setupVoiceButton
-import me.antonionoack.ircontrol.XMLSettingsLoader.loadNewSettings
 import me.antonionoack.ircontrol.camera.CameraSensor.CAMERA_PERMISSIONS_ID
 import me.antonionoack.ircontrol.camera.CameraSensor.allPermissionsGranted
 import me.antonionoack.ircontrol.camera.CameraSensor.startCamera
