@@ -13,7 +13,12 @@ import android.os.Build
 import android.text.InputType
 import android.view.MotionEvent
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.SeekBar
+import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.math.MathUtils
 import me.antonionoack.ircontrol.MainActivity
@@ -21,7 +26,7 @@ import me.antonionoack.ircontrol.Projects.projectName
 import me.antonionoack.ircontrol.Projects.projectNames
 import me.antonionoack.ircontrol.R
 import me.antonionoack.ircontrol.camera.CameraSensor
-import me.antonionoack.ircontrol.camera.CameraSensor.black
+import me.antonionoack.ircontrol.camera.CameraSensor.BLACK
 import me.antonionoack.ircontrol.camera.CameraSensor.tryStartCamera
 import me.antonionoack.ircontrol.ir.commands.DrawnControl
 import me.antonionoack.ircontrol.ir.commands.ExecIfColor
@@ -44,7 +49,6 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-
 object CommandLogic {
 
     const val FLOAT = 0
@@ -62,6 +66,7 @@ object CommandLogic {
         save(projectName)
     }
 
+    @SuppressLint("UseKtx")
     fun MainActivity.save(projectName: String) {
         val v = sequence.filter { it.isManual }.joinToString("|")
         preferences.edit()
@@ -74,9 +79,10 @@ object CommandLogic {
     fun MainActivity.loadProjects() {
         projectName = preferences.getString("project", "") ?: ""
         projectNames.clear()
-        projectNames.addAll((preferences.getString("projects", "") ?: "")
-            .split("\n")
-            .filter { it.isNotEmpty() })
+        projectNames.addAll(
+            (preferences.getString("projects", "") ?: "")
+                .split("\n")
+                .filter { it.isNotEmpty() })
     }
 
     fun MainActivity.loadCurrentProject() {
@@ -133,77 +139,69 @@ object CommandLogic {
                         }
 
                         'c' -> {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                val vs = cmd.substring(1).split(';')
-                                n = WaitForColor(
-                                    vs[0].toFloat(),
-                                    vs[1].toFloat(),
-                                    vs[2].toInt(16),
-                                    vs[3].toFloat()
-                                )
-                                v = waitForColor(n)
-                            } else continue
+                            val vs = cmd.substring(1).split(';')
+                            n = WaitForColor(
+                                vs[0].toFloat(),
+                                vs[1].toFloat(),
+                                vs[2].toInt(16),
+                                vs[3].toFloat()
+                            )
+                            v = waitForColor(n)
                         }
 
                         'w' -> {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                val vs = cmd.substring(1).split(';')
-                                n = WaitForColorChange(
-                                    vs[0].toFloat(),
-                                    vs[1].toFloat(),
-                                    // vs[2] is ignored
-                                    vs[3].toFloat()
-                                )
-                                v = waitForColor(n)
-                            } else continue
+                            val vs = cmd.substring(1).split(';')
+                            n = WaitForColorChange(
+                                vs[0].toFloat(),
+                                vs[1].toFloat(),
+                                // vs[2] is ignored
+                                vs[3].toFloat()
+                            )
+                            v = waitForColor(n)
                         }
 
                         'x' -> {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                val vs = cmd.substring(1).split(';')
-                                val names = vs.subList(5, vs.size)
-                                var elseIdx = names.indexOf("")
-                                if (elseIdx < 0) elseIdx = names.size
-                                n = ExecIfColor(
-                                    vs[0].toFloat(),
-                                    vs[1].toFloat(),
-                                    vs[2].toInt(16),
-                                    vs[3].toFloat(),
-                                    vs[4].toFloat(),
-                                    names.subList(0, elseIdx).filter { it.isNotBlank() },
-                                    names.subList(elseIdx, names.size).filter { it.isNotBlank() }
-                                )
-                                v = execIfColor(n)
-                            } else continue
+                            val vs = cmd.substring(1).split(';')
+                            val names = vs.subList(5, vs.size)
+                            var elseIdx = names.indexOf("")
+                            if (elseIdx < 0) elseIdx = names.size
+                            n = ExecIfColor(
+                                vs[0].toFloat(),
+                                vs[1].toFloat(),
+                                vs[2].toInt(16),
+                                vs[3].toFloat(),
+                                vs[4].toFloat(),
+                                names.subList(0, elseIdx).filter { it.isNotBlank() },
+                                names.subList(elseIdx, names.size).filter { it.isNotBlank() }
+                            )
+                            v = execIfColor(n)
                         }
 
                         'X', 'Y' -> {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                val vs = cmd.substring(1).split(';')
-                                val names = vs.subList(9, vs.size)
-                                var elseIdx = names.indexOf("")
-                                if (elseIdx < 0) elseIdx = names.size
-                                val wfc0 = WaitForColor(
-                                    vs[0].toFloat(),
-                                    vs[1].toFloat(),
-                                    vs[2].toInt(16),
-                                    vs[3].toFloat()
-                                )
-                                val wfc1 = WaitForColor(
-                                    vs[4].toFloat(),
-                                    vs[5].toFloat(),
-                                    vs[6].toInt(16),
-                                    vs[7].toFloat(),
-                                )
-                                val duration = vs[8].toFloat()
-                                val ifNames = names.subList(0, elseIdx).filter { it.isNotBlank() }
-                                val elseNames =
-                                    names.subList(elseIdx, names.size).filter { it.isNotBlank() }
-                                n = if (cmd[0] == 'X')
-                                    ExecIfColorX2(wfc0, wfc1, duration, ifNames, elseNames)
-                                else WaitForNotColor(wfc0, wfc1, duration, ifNames, elseNames)
-                                v = execIfColorX2(n as ExecIfColorX2)
-                            } else continue
+                            val vs = cmd.substring(1).split(';')
+                            val names = vs.subList(9, vs.size)
+                            var elseIdx = names.indexOf("")
+                            if (elseIdx < 0) elseIdx = names.size
+                            val wfc0 = WaitForColor(
+                                vs[0].toFloat(),
+                                vs[1].toFloat(),
+                                vs[2].toInt(16),
+                                vs[3].toFloat()
+                            )
+                            val wfc1 = WaitForColor(
+                                vs[4].toFloat(),
+                                vs[5].toFloat(),
+                                vs[6].toInt(16),
+                                vs[7].toFloat(),
+                            )
+                            val duration = vs[8].toFloat()
+                            val ifNames = names.subList(0, elseIdx).filter { it.isNotBlank() }
+                            val elseNames =
+                                names.subList(elseIdx, names.size).filter { it.isNotBlank() }
+                            n = if (cmd[0] == 'X')
+                                ExecIfColorX2(wfc0, wfc1, duration, ifNames, elseNames)
+                            else WaitForNotColor(wfc0, wfc1, duration, ifNames, elseNames)
+                            v = execIfColorX2(n as ExecIfColorX2)
                         }
 
                         'S' -> {
@@ -218,7 +216,8 @@ object CommandLogic {
                             val vs = cmd.substring(1).split(';')
                             val length = (vs.size - 1) / 3
                             val motors = Motor.values()
-                            n = DrawnControl(vs[0].toFloat(),
+                            n = DrawnControl(
+                                vs[0].toFloat(),
                                 (0 until length).map {
                                     val i3 = it * 3 + 1
                                     DrawnControl.SpeedChange(
@@ -298,64 +297,54 @@ object CommandLogic {
             }
         }
         v.findViewById<View>(R.id.addWaitForColor).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                setOnClickListener {
-                    addWaitForColor(n, di)
-                    v.dismiss()
-                }
-                setOnLongClickListener {
-                    toast("Add wait-for-color", false)
-                    true
-                }
-            } else visibility = View.GONE
+            setOnClickListener {
+                addWaitForColor(n, di)
+                v.dismiss()
+            }
+            setOnLongClickListener {
+                toast("Add wait-for-color", false)
+                true
+            }
         }
         v.findViewById<View>(R.id.addExecIfColor).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                setOnClickListener {
-                    addExecIfColor(n, di)
-                    v.dismiss()
-                }
-                setOnLongClickListener {
-                    toast("Add exec-if-color", false)
-                    true
-                }
-            } else visibility = View.GONE
+            setOnClickListener {
+                addExecIfColor(n, di)
+                v.dismiss()
+            }
+            setOnLongClickListener {
+                toast("Add exec-if-color", false)
+                true
+            }
         }
         v.findViewById<View>(R.id.addExecIfColorX2).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                setOnClickListener {
-                    addExecIfColorX2(n, di)
-                    v.dismiss()
-                }
-                setOnLongClickListener {
-                    toast("Add exec-if-color2", false)
-                    true
-                }
-            } else visibility = View.GONE
+            setOnClickListener {
+                addExecIfColorX2(n, di)
+                v.dismiss()
+            }
+            setOnLongClickListener {
+                toast("Add exec-if-color2", false)
+                true
+            }
         }
         v.findViewById<View>(R.id.addExecIfNotColorX2).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                setOnClickListener {
-                    addExecIfNotColorX2(n, di)
-                    v.dismiss()
-                }
-                setOnLongClickListener {
-                    toast("Add exec-if-not-color2", false)
-                    true
-                }
-            } else visibility = View.GONE
+            setOnClickListener {
+                addExecIfNotColorX2(n, di)
+                v.dismiss()
+            }
+            setOnLongClickListener {
+                toast("Add exec-if-not-color2", false)
+                true
+            }
         }
         v.findViewById<View>(R.id.addWaitForColorChange).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                setOnClickListener {
-                    addWaitForColorChange(n, di)
-                    v.dismiss()
-                }
-                setOnLongClickListener {
-                    toast("Add exec-if-not-color2", false)
-                    true
-                }
-            } else visibility = View.GONE
+            setOnClickListener {
+                addWaitForColorChange(n, di)
+                v.dismiss()
+            }
+            setOnLongClickListener {
+                toast("Add exec-if-not-color2", false)
+                true
+            }
         }
         v.findViewById<View>(R.id.cancelButton)
             .setOnClickListener {
@@ -603,7 +592,6 @@ object CommandLogic {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     fun MainActivity.waitForColor(n: WaitForColor): View {
         @SuppressLint("InflateParams")
@@ -612,11 +600,11 @@ object CommandLogic {
         if (n is ExecIfColor) titleView.text = "Color-IfElse"
         else if (n is WaitForColorChange) titleView.text = "Wait For Color-Change"
         val colorView = v.findViewById<View>(R.id.colorId0)
-        colorView.setBackgroundColor(n.color or black)
+        colorView.setBackgroundColor(n.color or BLACK)
         v.findViewById<View>(R.id.colorId1).visibility = View.GONE
         colorView.setOnClickListener {
             tryStartCamera(n, false) {
-                if (it != null) colorView.setBackgroundColor((it.color) or black)
+                if (it != null) colorView.setBackgroundColor((it.color) or BLACK)
                 false
             }
         }
@@ -633,7 +621,6 @@ object CommandLogic {
         return v
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     fun MainActivity.execIfColorX2(n: ExecIfColorX2): View {
         @SuppressLint("InflateParams")
@@ -641,18 +628,18 @@ object CommandLogic {
         v.findViewById<TextView>(R.id.title).text =
             if (n is WaitForNotColor) "Color-WaitUntilDifferent" else "Color-IfElse2"
         val colorView0 = v.findViewById<View>(R.id.colorId0)
-        colorView0.setBackgroundColor(n.wfc0.color or black)
+        colorView0.setBackgroundColor(n.wfc0.color or BLACK)
         colorView0.setOnClickListener {
             tryStartCamera(n.wfc0, false) {
-                if (it != null) colorView0.setBackgroundColor((it.color) or black)
+                if (it != null) colorView0.setBackgroundColor((it.color) or BLACK)
                 false
             }
         }
         val colorView1 = v.findViewById<View>(R.id.colorId1)
-        colorView1.setBackgroundColor(n.wfc1.color or black)
+        colorView1.setBackgroundColor(n.wfc1.color or BLACK)
         colorView1.setOnClickListener {
             tryStartCamera(n.wfc1, false) {
-                if (it != null) colorView1.setBackgroundColor((it.color) or black)
+                if (it != null) colorView1.setBackgroundColor((it.color) or BLACK)
                 false
             }
         }
@@ -668,7 +655,6 @@ object CommandLogic {
         return v
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     fun MainActivity.execIfColor(n: ExecIfColor): View {
         return waitForColor(n)
@@ -781,7 +767,6 @@ object CommandLogic {
         save()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.addWaitForColor(item: Any?, di: Int) {
         val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = WaitForColor()
@@ -791,7 +776,6 @@ object CommandLogic {
         save()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.addWaitForColorChange(item: Any?, di: Int) {
         val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = WaitForColorChange()
@@ -801,7 +785,6 @@ object CommandLogic {
         save()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.addExecIfColor(item: Any?, di: Int) {
         val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = ExecIfColor()
@@ -811,7 +794,6 @@ object CommandLogic {
         save()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.addExecIfColorX2(item: Any?, di: Int) {
         val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = ExecIfColorX2()
@@ -821,7 +803,6 @@ object CommandLogic {
         save()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun MainActivity.addExecIfNotColorX2(item: Any?, di: Int) {
         val i = min(sequence.indexOf(item) + di, sequence.size)
         val n = WaitForNotColor()
@@ -872,15 +853,12 @@ object CommandLogic {
             when (command) {
                 is Sleep -> doSleep(command.duration)
                 is Quit -> runId++
-
                 is MotorSpeed -> {
                     // R1, B1, R2, B2, R3, B3, R4, B4
                     val motorId = command.id * 2 + (if (command.red) 0 else 1)
                     Motor.values()[motorId].setSpeed(command.speed)
                 }
-
                 is RandomCall -> tryExecFunction(command.names, i)
-
                 is SoundFX -> {
                     // play sound
                     runOnUiThread {
@@ -906,144 +884,128 @@ object CommandLogic {
                         }
                     }
                 }
-
                 is ExecIfColor -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
-                        var shallRun = true
-                        var isCloseEnough = false
+                    var shallRun = true
+                    var isCloseEnough = false
 
-                        tryStartCamera(command, true) {
-                            if (it != null &&
-                                CameraSensor.targets.firstOrNull()?.color == command.color &&
-                                CameraSensor.isCloseEnough
-                            )
-                                isCloseEnough = true
-                            if (it == null || isCloseEnough) shallRun = false
-                            !shallRun
-                        }
-
-                        val startTime = System.nanoTime()
-                        val timeout = (command.duration * 1e9).toLong()
-                        while (
-                            runId == id && shallRun &&
-                            System.nanoTime() - startTime < timeout
-                        ) Thread.sleep(1)
-
-                        val names = if (CameraSensor.isCloseEnough) command.ifNames
-                        else command.elseNames
-                        tryExecFunction(names, i)
-
-                        shallRun = false
-                        waitForColorCallback = null
+                    tryStartCamera(command, true) {
+                        if (it != null &&
+                            CameraSensor.targets.firstOrNull()?.color == command.color &&
+                            CameraSensor.isCloseEnough
+                        )
+                            isCloseEnough = true
+                        if (it == null || isCloseEnough) shallRun = false
+                        !shallRun
                     }
-                }
 
+                    val startTime = System.nanoTime()
+                    val timeout = (command.duration * 1e9).toLong()
+                    while (
+                        runId == id && shallRun &&
+                        System.nanoTime() - startTime < timeout
+                    ) Thread.sleep(1)
+
+                    val names = if (CameraSensor.isCloseEnough) command.ifNames
+                    else command.elseNames
+                    tryExecFunction(names, i)
+
+                    shallRun = false
+                    waitForColorCallback = null
+                }
                 is WaitForNotColor -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
-                        var shallRun = true
-                        var isGood = false
-                        var lastCloseTime = System.nanoTime()
-                        val targetDuration = (command.duration * 1e9).toLong()
+                    var shallRun = true
+                    var isGood = false
+                    var lastCloseTime = System.nanoTime()
+                    val targetDuration = (command.duration * 1e9).toLong()
 
-                        tryStartCamera(listOf(command.wfc0, command.wfc1), true) {
-                            val isCloseEnough = it != null &&
-                                    (CameraSensor.targets.getOrNull(0)?.color == command.wfc0.color ||
-                                            CameraSensor.targets.getOrNull(1)?.color == command.wfc1.color) &&
-                                    CameraSensor.isCloseEnough
-                            if (it == null) shallRun = false
-                            val time = System.nanoTime()
-                            if (isCloseEnough) lastCloseTime = time
-                            else if (time > lastCloseTime + targetDuration) {
-                                // color was different for long enough
-                                shallRun = false
-                                isGood = true
-                            }
-                            !shallRun
-                        }
-
-                        while (runId == id && shallRun) Thread.sleep(1)
-
-                        val names = if (isGood) command.ifNames
-                        else command.elseNames
-                        tryExecFunction(names, i)
-
-                        shallRun = false
-                        waitForColorCallback = null
-                    }
-                }
-
-                is ExecIfColorX2 -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-
-                        var shallRun = true
-                        var isCloseEnough = false
-
-                        tryStartCamera(listOf(command.wfc0, command.wfc1), true) {
-                            if (it != null &&
+                    tryStartCamera(listOf(command.wfc0, command.wfc1), true) {
+                        val isCloseEnough = it != null &&
                                 (CameraSensor.targets.getOrNull(0)?.color == command.wfc0.color ||
                                         CameraSensor.targets.getOrNull(1)?.color == command.wfc1.color) &&
                                 CameraSensor.isCloseEnough
-                            ) isCloseEnough = true
-                            if (it == null || isCloseEnough) shallRun = false
-                            !shallRun
+                        if (it == null) shallRun = false
+                        val time = System.nanoTime()
+                        if (isCloseEnough) lastCloseTime = time
+                        else if (time > lastCloseTime + targetDuration) {
+                            // color was different for long enough
+                            shallRun = false
+                            isGood = true
                         }
-
-                        val startTime = System.nanoTime()
-                        val timeout = (command.duration * 1e9).toLong()
-                        while (
-                            runId == id && shallRun &&
-                            System.nanoTime() - startTime < timeout
-                        ) Thread.sleep(1)
-
-                        val names = if (CameraSensor.isCloseEnough) command.ifNames
-                        else command.elseNames
-                        tryExecFunction(names, i)
-
-                        shallRun = false
-                        waitForColorCallback = null
+                        !shallRun
                     }
-                }
 
+                    while (runId == id && shallRun) Thread.sleep(1)
+
+                    val names = if (isGood) command.ifNames
+                    else command.elseNames
+                    tryExecFunction(names, i)
+
+                    shallRun = false
+                    waitForColorCallback = null
+                }
+                is ExecIfColorX2 -> {
+
+                    var shallRun = true
+                    var isCloseEnough = false
+
+                    tryStartCamera(listOf(command.wfc0, command.wfc1), true) {
+                        if (it != null &&
+                            (CameraSensor.targets.getOrNull(0)?.color == command.wfc0.color ||
+                                    CameraSensor.targets.getOrNull(1)?.color == command.wfc1.color) &&
+                            CameraSensor.isCloseEnough
+                        ) isCloseEnough = true
+                        if (it == null || isCloseEnough) shallRun = false
+                        !shallRun
+                    }
+
+                    val startTime = System.nanoTime()
+                    val timeout = (command.duration * 1e9).toLong()
+                    while (
+                        runId == id && shallRun &&
+                        System.nanoTime() - startTime < timeout
+                    ) Thread.sleep(1)
+
+                    val names = if (CameraSensor.isCloseEnough) command.ifNames
+                    else command.elseNames
+                    tryExecFunction(names, i)
+
+                    shallRun = false
+                    waitForColorCallback = null
+                }
                 is WaitForColorChange -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        var shallRun = true
-                        var isGood = false
-                        tryStartCamera(command, true) {
-                            if (it != null && CameraSensor.isDifferentEnough) isGood = true
-                            if (it == null || isGood) shallRun = false
-                            !shallRun
-                        }
-                        while (runId == id && shallRun) {
-                            Thread.sleep(1)
-                        }
-                        shallRun = false
-                        waitForColorCallback = null
+                    var shallRun = true
+                    var isGood = false
+                    tryStartCamera(command, true) {
+                        if (it != null && CameraSensor.isDifferentEnough) isGood = true
+                        if (it == null || isGood) shallRun = false
+                        !shallRun
                     }
+                    while (runId == id && shallRun) {
+                        Thread.sleep(1)
+                    }
+                    shallRun = false
+                    waitForColorCallback = null
                 }
-
                 is WaitForColor -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        var shallRun = true
-                        var isGood = false
-                        tryStartCamera(command, true) {
-                            if (it != null &&
-                                CameraSensor.targets.firstOrNull()?.color == command.color &&
-                                CameraSensor.isCloseEnough
-                            ) isGood =
-                                true
-                            if (it == null || isGood) shallRun = false
-                            !shallRun
-                        }
-                        while (runId == id && shallRun) {
-                            Thread.sleep(1)
-                        }
-                        shallRun = false
-                        waitForColorCallback = null
+                    var shallRun = true
+                    var isGood = false
+                    tryStartCamera(command, true) {
+                        if (it != null &&
+                            CameraSensor.targets.firstOrNull()?.color == command.color &&
+                            CameraSensor.isCloseEnough
+                        ) isGood =
+                            true
+                        if (it == null || isGood) shallRun = false
+                        !shallRun
                     }
+                    while (runId == id && shallRun) {
+                        Thread.sleep(1)
+                    }
+                    shallRun = false
+                    waitForColorCallback = null
                 }
-
                 is DrawnControl -> {
                     val commands0 = command.speedChanges
                     val duration = command.duration
@@ -1133,7 +1095,6 @@ object CommandLogic {
         update()
     }
 
-
     private fun MainActivity.tryExecFunction(names: List<String>, i: Int) {
         tryExecFunction(names.randomOrNull(), i)
     }
@@ -1167,11 +1128,14 @@ object CommandLogic {
         }
     }
 
-    fun MainActivity.startMotorController() {
-        val service = getSystemService(Context.CONSUMER_IR_SERVICE) as ConsumerIrManager
-        val controller = LegoIRController(service)
-        controller.start()
-        CommandLogic.controller = controller
+    fun MainActivity.startMotorController(): Boolean {
+        val service = getSystemService(Context.CONSUMER_IR_SERVICE) as? ConsumerIrManager
+        if (service != null) {
+            val controller = LegoIRController(service)
+            controller.start()
+            CommandLogic.controller = controller
+            return true
+        } else return false
     }
 
     fun stopMotorController() {

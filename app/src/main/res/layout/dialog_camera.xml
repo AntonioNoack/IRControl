@@ -67,14 +67,10 @@
         android:text="@string/sensitivity_title"
         android:textAlignment="center" />
 
-    <com.google.android.material.slider.Slider
+    <me.antonionoack.ircontrol.ir.views.HorizontalSliderView
         android:id="@+id/sensitivitySlider"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:stepSize="0"
-        android:value="0.5"
-        android:valueFrom="0"
-        android:valueTo="1" />
+        android:layout_height="40dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"

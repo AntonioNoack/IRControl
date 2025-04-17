@@ -6,61 +6,76 @@
     android:orientation="vertical">
 
     <TextView
-        android:text="@string/app_name"
+        android:id="@+id/infraredNotSupported"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/purple_200"
-        android:gravity="center"
+        android:background="#f55"
         android:padding="10dp"
-        android:textSize="20sp" />
-
-    <Button
-        android:id="@+id/manualControl"
-        style="@style/BetterButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/manual_control_menu"
-        android:textAllCaps="false" />
-
-    <Button
-        android:id="@+id/createProject"
-        style="@style/BetterButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/create_project_menu"
-        android:textAllCaps="false" />
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="20dp" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/projects_title"
-        android:textSize="20sp" />
+        android:text="@string/infrared_not_supported_warning"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
     <ScrollView
-        android:layout_weight="1"
         android:layout_width="match_parent"
-        android:layout_height="0dp">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/projectList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp">
+            android:orientation="vertical">
 
-            <include layout="@layout/project_button" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="@string/app_name"
+                android:textColor="@color/purple_200"
+                android:textSize="20sp" />
 
-            <include layout="@layout/project_button" />
+            <Button
+                android:id="@+id/manualControl"
+                style="@style/BetterButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/manual_control_menu"
+                android:textAllCaps="false" />
 
-            <include layout="@layout/project_button" />
+            <Button
+                android:id="@+id/createProject"
+                style="@style/BetterButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/create_project_menu"
+                android:textAllCaps="false" />
 
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/projects_title"
+                android:textSize="20sp" />
+
+            <LinearLayout
+                android:id="@+id/projectList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <include layout="@layout/project_button" />
+                <include layout="@layout/project_button" />
+                <include layout="@layout/project_button" />
+
+            </LinearLayout>
         </LinearLayout>
-
     </ScrollView>
-
 </LinearLayout>

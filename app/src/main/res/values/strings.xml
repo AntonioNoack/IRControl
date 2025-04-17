@@ -46,4 +46,5 @@
     <string name="add_new_command">Add New Command</string>
     <string name="add_sound_effect">📢 Sound Effect</string>
     <string name="add_drawn_motor_control">🎨 Drawn Motor Control</string>
+    <string name="infrared_not_supported_warning">Infrared not supported!\nThis app doesn\'t work with this device!</string>
 </resources>

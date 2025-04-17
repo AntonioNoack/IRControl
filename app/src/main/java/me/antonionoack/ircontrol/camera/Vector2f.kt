@@ -5,6 +5,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class Vector2f(var x: Float, var y: Float) {
+    constructor() : this(0f, 0f)
+
     fun set(nx: Float, ny: Float): Vector2f {
         x = nx
         y = ny

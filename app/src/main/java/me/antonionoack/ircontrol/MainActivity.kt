@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.os.Build
 import android.os.Bundle
 import android.speech.SpeechRecognizer
 import android.view.View
@@ -20,6 +19,7 @@ import me.antonionoack.ircontrol.Voice.ASR_PERMISSION_REQUEST_CODE
 import me.antonionoack.ircontrol.Voice.handleSpeechBegin
 import me.antonionoack.ircontrol.Voice.handleSpeechEnd
 import me.antonionoack.ircontrol.Voice.setupVoiceButton
+import me.antonionoack.ircontrol.XMLSettingsLoader.loadNewSettings
 import me.antonionoack.ircontrol.camera.CameraSensor.CAMERA_PERMISSIONS_ID
 import me.antonionoack.ircontrol.camera.CameraSensor.allPermissionsGranted
 import me.antonionoack.ircontrol.camera.CameraSensor.startCamera
@@ -63,9 +63,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_all)
 
+        supportActionBar?.hide()
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+
         // todo scan for no longer needed soundfx files
 
+        // is stored on the device (use Device Manager) under data/data/<app-id>
         preferences = getPreferences(MODE_PRIVATE)
+
         sequenceView = findViewById(R.id.sequence)
         flipper = findViewById(R.id.flipper)
 
@@ -93,7 +98,10 @@ class MainActivity : AppCompatActivity() {
 
         loadProjects()
         loadCurrentProject()
-        startMotorController()
+        val ok = startMotorController()
+
+        findViewById<View>(R.id.infraredNotSupported)
+            .visibility = if (ok) View.GONE else View.VISIBLE
 
         setupVoiceButton()
         setupProjectList()
@@ -145,10 +153,8 @@ class MainActivity : AppCompatActivity() {
 
             CAMERA_PERMISSIONS_ID -> {
                 if (allPermissionsGranted()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        val cmd = waitForColorCommand
-                        if (cmd.isNotEmpty()) startCamera(cmd)
-                    } else toast("Android API too old :/", true)
+                    val cmd = waitForColorCommand
+                    if (cmd.isNotEmpty()) startCamera(cmd)
                 } else if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
                     toast("Granted but missing camera permissions", true)
                 } else toast("Missing camera permissions", true)
